@@ -55,6 +55,18 @@ export default async function DashboardPage() {
           <p className="font-medium">Content</p>
           <p className="text-xs text-zinc-500">Generate &amp; review</p>
         </Link>
+        <Link href="/dashboard/approvals" className="rounded-xl border border-zinc-800 bg-zinc-900 p-4 hover:bg-zinc-800">
+          <p className="font-medium">Approvals</p>
+          <p className="text-xs text-zinc-500">Review &amp; approve</p>
+        </Link>
+        <Link href="/dashboard/calendar" className="rounded-xl border border-zinc-800 bg-zinc-900 p-4 hover:bg-zinc-800">
+          <p className="font-medium">Calendar</p>
+          <p className="text-xs text-zinc-500">Schedule &amp; upcoming</p>
+        </Link>
+        <Link href="/dashboard/history" className="rounded-xl border border-zinc-800 bg-zinc-900 p-4 hover:bg-zinc-800">
+          <p className="font-medium">History</p>
+          <p className="text-xs text-zinc-500">All content + states</p>
+        </Link>
         <Link href="/dashboard/products" className="rounded-xl border border-zinc-800 bg-zinc-900 p-4 hover:bg-zinc-800">
           <p className="font-medium">Products</p>
           <p className="text-xs text-zinc-500">WooCommerce catalogue</p>

@@ -34,7 +34,25 @@ export interface ContentItem {
   videoUrl: string | null;
   voiceoverUrl: string | null;
   finalVideoUrls: Partial<Record<Platform, string>>;
+  caption: string | null;
+  platforms: Platform[];
+  approvedAt: string | null;
+  approvedByUserId: string | null;
+  rejectedAt: string | null;
+  rejectionReason: string | null;
+  scheduledAt: string | null;
+  publishedAt: string | null;
   error: string | null;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface ContentVariant {
+  id: number;
+  contentItemId: number;
+  variantType: string;
+  hook: string | null;
+  script: ScriptOutput | Record<string, never>;
+  imageUrl: string | null;
+  performanceMetrics: Record<string, unknown>;
 }

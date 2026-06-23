@@ -1,0 +1,146 @@
+'use client';
+
+import { useMemo, useState } from 'react';
+import type { ContentItem, ContentState, ContentVariant } from '@/lib/content/types';
+import type { Platform } from '@/lib/adapters/generation';
+
+const STATES: (ContentState | 'all')[] = [
+  'all', 'draft', 'generating', 'ready_for_review', 'waiting_for_credits',
+  'failed_retryable', 'approved', 'scheduled', 'published', 'analyzed',
+];
+const PLATFORMS: (Platform | 'all')[] = ['all', 'instagram', 'tiktok', 'facebook'];
+
+export function HistoryView({
+  items,
+  variantsByItem,
+}: {
+  items: ContentItem[];
+  variantsByItem: Record<number, ContentVariant[]>;
+}) {
+  const [state, setState] = useState<ContentState | 'all'>('all');
+  const [platform, setPlatform] = useState<Platform | 'all'>('all');
+  const [open, setOpen] = useState<number | null>(null);
+
+  const rows = useMemo(() => {
+    return items.filter((it) => {
+      if (state !== 'all' && it.state !== state) return false;
+      if (platform !== 'all') {
+        const ps = it.platforms.length ? it.platforms : (Object.keys(it.finalVideoUrls) as Platform[]);
+        if (!ps.includes(platform)) return false;
+      }
+      return true;
+    });
+  }, [items, state, platform]);
+
+  return (
+    <div className="space-y-3">
+      <div className="flex flex-wrap gap-3 text-sm">
+        <label className="flex items-center gap-2">
+          <span className="text-zinc-400">State</span>
+          <select value={state} onChange={(e) => setState(e.target.value as ContentState | 'all')} className="rounded border border-zinc-700 bg-zinc-950 px-2 py-1">
+            {STATES.map((s) => <option key={s} value={s}>{s}</option>)}
+          </select>
+        </label>
+        <label className="flex items-center gap-2">
+          <span className="text-zinc-400">Platform</span>
+          <select value={platform} onChange={(e) => setPlatform(e.target.value as Platform | 'all')} className="rounded border border-zinc-700 bg-zinc-950 px-2 py-1">
+            {PLATFORMS.map((p) => <option key={p} value={p}>{p}</option>)}
+          </select>
+        </label>
+        <span className="self-center text-xs text-zinc-500">{rows.length} of {items.length}</span>
+      </div>
+
+      <div className="overflow-hidden rounded-xl border border-zinc-800">
+        <table className="w-full text-sm">
+          <thead className="bg-zinc-900 text-left text-zinc-400">
+            <tr>
+              <th className="px-4 py-2 font-medium">#</th>
+              <th className="px-4 py-2 font-medium">State</th>
+              <th className="px-4 py-2 font-medium">Format</th>
+              <th className="px-4 py-2 font-medium">Platforms</th>
+              <th className="px-4 py-2 font-medium">Created</th>
+              <th className="px-4 py-2 font-medium">Published</th>
+              <th className="px-4 py-2 font-medium" />
+            </tr>
+          </thead>
+          <tbody>
+            {rows.length === 0 && (
+              <tr><td colSpan={7} className="px-4 py-6 text-center text-zinc-500">No items match.</td></tr>
+            )}
+            {rows.map((it) => {
+              const ps = it.platforms.length ? it.platforms : Object.keys(it.finalVideoUrls);
+              const expanded = open === it.id;
+              return (
+                <FragmentRow
+                  key={it.id}
+                  item={it}
+                  platforms={ps}
+                  expanded={expanded}
+                  variants={variantsByItem[it.id] ?? []}
+                  onToggle={() => setOpen(expanded ? null : it.id)}
+                />
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+function FragmentRow({
+  item, platforms, expanded, variants, onToggle,
+}: {
+  item: ContentItem;
+  platforms: string[];
+  expanded: boolean;
+  variants: ContentVariant[];
+  onToggle: () => void;
+}) {
+  const script = item.script as { hook?: string; body?: string; cta?: string; hashtags?: string[] };
+  return (
+    <>
+      <tr className="border-t border-zinc-800">
+        <td className="px-4 py-2 text-zinc-500">{item.id}</td>
+        <td className="px-4 py-2 font-mono text-zinc-300">{item.state}</td>
+        <td className="px-4 py-2">{item.format ?? '—'}</td>
+        <td className="px-4 py-2 text-zinc-400">{platforms.join(', ') || '—'}</td>
+        <td className="px-4 py-2 text-zinc-500">{new Date(item.createdAt).toLocaleDateString()}</td>
+        <td className="px-4 py-2 text-zinc-500">{item.publishedAt ? new Date(item.publishedAt).toLocaleDateString() : '—'}</td>
+        <td className="px-4 py-2 text-right">
+          <button onClick={onToggle} className="text-xs text-indigo-400 hover:underline">{expanded ? 'Hide' : 'Details'}</button>
+        </td>
+      </tr>
+      {expanded && (
+        <tr className="border-t border-zinc-800 bg-zinc-950/50">
+          <td colSpan={7} className="px-4 py-3">
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="space-y-1 text-xs">
+                <p className="text-zinc-400">Hook</p>
+                <p className="text-zinc-200">{script.hook ?? '—'}</p>
+                <p className="mt-2 text-zinc-400">Body</p>
+                <p className="text-zinc-300">{script.body ?? '—'}</p>
+                <p className="mt-2 text-zinc-400">CTA</p>
+                <p className="text-zinc-300">{script.cta ?? '—'}</p>
+                {script.hashtags?.length ? <p className="mt-2 text-zinc-500">{script.hashtags.map((h) => (h.startsWith('#') ? h : `#${h}`)).join(' ')}</p> : null}
+              </div>
+              <div className="space-y-2 text-xs">
+                <p className="text-zinc-400">A/B variants</p>
+                {variants.length === 0 ? <p className="text-zinc-600">—</p> : variants.map((v) => (
+                  <p key={v.id}><span className="font-mono text-indigo-400">{v.variantType}:</span> <span className="text-zinc-300">{v.hook}</span></p>
+                ))}
+                <p className="mt-2 text-zinc-400">Outputs</p>
+                {Object.entries(item.finalVideoUrls).length === 0 ? <p className="text-zinc-600">—</p> :
+                  Object.entries(item.finalVideoUrls).map(([p, u]) => (
+                    <p key={p}><a href={u} target="_blank" rel="noreferrer" className="text-blue-400 hover:underline">{p} MP4 ↗</a></p>
+                  ))}
+                <p className="mt-2 text-zinc-500">Usage cost: per-item attribution arrives with billing (Module 10)</p>
+                {item.rejectionReason && <p className="text-red-400">Rejected: {item.rejectionReason}</p>}
+              </div>
+            </div>
+          </td>
+        </tr>
+      )}
+    </>
+  );
+}
