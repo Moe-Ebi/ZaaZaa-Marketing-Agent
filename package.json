@@ -13,13 +13,15 @@
     "test:rls": "tsx scripts/test-rls.ts",
     "test:vault": "tsx scripts/test-vault.ts",
     "test:refresh": "tsx scripts/test-refresh-job.ts",
-    "test:sync-products": "tsx scripts/test-sync-products.ts"
+    "test:sync-products": "tsx scripts/test-sync-products.ts",
+    "test:brand-voice": "tsx scripts/test-brand-voice.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.0",
     "@supabase/supabase-js": "^2.108.2",
     "inngest": "^4.8.0",
     "next": "16.2.9",
+    "openai": "^6.44.0",
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "zod": "^4.4.3"
