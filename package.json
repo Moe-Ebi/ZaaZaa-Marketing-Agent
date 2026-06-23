@@ -15,7 +15,8 @@
     "test:refresh": "tsx scripts/test-refresh-job.ts",
     "test:sync-products": "tsx scripts/test-sync-products.ts",
     "test:brand-voice": "tsx scripts/test-brand-voice.ts",
-    "test:generation": "tsx scripts/test-generation.ts"
+    "test:generation": "tsx scripts/test-generation.ts",
+    "test:generate-content": "tsx scripts/test-generate-content.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.0",

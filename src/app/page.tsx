@@ -16,6 +16,7 @@ export default function Home() {
           <p className="text-green-400 font-mono text-sm">✓ Module 3 — WooCommerce</p>
           <p className="text-green-400 font-mono text-sm">✓ Module 4 — Brand profile</p>
           <p className="text-green-400 font-mono text-sm">✓ Module 5 — Generation adapters</p>
+          <p className="text-green-400 font-mono text-sm">✓ Module 6 — Content pipeline</p>
         </div>
       </div>
     </main>

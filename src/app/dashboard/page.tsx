@@ -50,7 +50,11 @@ export default async function DashboardPage() {
         )}
       </section>
 
-      <nav className="grid gap-3 sm:grid-cols-3">
+      <nav className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <Link href="/dashboard/content" className="rounded-xl border border-zinc-800 bg-zinc-900 p-4 hover:bg-zinc-800">
+          <p className="font-medium">Content</p>
+          <p className="text-xs text-zinc-500">Generate &amp; review</p>
+        </Link>
         <Link href="/dashboard/products" className="rounded-xl border border-zinc-800 bg-zinc-900 p-4 hover:bg-zinc-800">
           <p className="font-medium">Products</p>
           <p className="text-xs text-zinc-500">WooCommerce catalogue</p>

@@ -24,6 +24,7 @@ export interface ScriptInput {
   product?: ProductContext;
   contentType?: string; // e.g. "reel", "story"
   angle?: string; // e.g. "new arrival", "bestseller", "low-stock urgency"
+  hook?: string; // anchor the script to this hook (from the PLAN A/B variants)
 }
 
 function brandConstraints(p: StoredBrandProfile | null): string {
@@ -97,6 +98,7 @@ relevant hashtags. Obey the brand constraints exactly.\n\n${brandConstraints(pro
     productBlock(input.product),
     input.contentType ? `Format: ${input.contentType}` : 'Format: short-form reel',
     input.angle ? `Angle: ${input.angle}` : null,
+    input.hook ? `Use this hook as the opening line (refine lightly if needed): "${input.hook}"` : null,
   ].filter(Boolean).join('\n');
 
   try {
