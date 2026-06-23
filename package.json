@@ -12,7 +12,8 @@
     "db:seed": "tsx scripts/seed.ts",
     "test:rls": "tsx scripts/test-rls.ts",
     "test:vault": "tsx scripts/test-vault.ts",
-    "test:refresh": "tsx scripts/test-refresh-job.ts"
+    "test:refresh": "tsx scripts/test-refresh-job.ts",
+    "test:sync-products": "tsx scripts/test-sync-products.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.0",

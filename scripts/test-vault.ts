@@ -14,7 +14,7 @@ import {
   getCredential,
   listAuditLog,
 } from '../src/lib/vault';
-import { getProducts } from '../src/lib/adapters/commerce';
+import { fetchAllProducts } from '../src/lib/adapters/commerce/woocommerce';
 
 let failures = 0;
 function check(label: string, ok: boolean, extra?: string) {
@@ -77,10 +77,10 @@ async function main() {
   await setCredential(orgId, 'woocommerce', JSON.stringify(woo), { action: 'create', label: 'Zaazaa WooCommerce' });
   console.log('  seeded Zaazaa WooCommerce credential into the vault');
 
-  const result = await getProducts(orgId, { perPage: 3 });
+  const result = await fetchAllProducts(orgId, { per_page: '3', page: '1' });
   if (result.ok) {
     check('adapter fetched products via vault credential', result.data.length > 0, `${result.data.length} products`);
-    if (result.data[0]) console.log(`    e.g. "${result.data[0].name}" — R${result.data[0].price}`);
+    if (result.data[0]) console.log(`    e.g. "${result.data[0].title}" — R${result.data[0].price}`);
   } else {
     check('adapter fetched products via vault credential', false, result.error);
   }

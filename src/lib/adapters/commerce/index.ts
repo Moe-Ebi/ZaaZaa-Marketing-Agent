@@ -1,8 +1,11 @@
-// Commerce adapter — wraps WooCommerce REST API.
-// All product/catalogue calls go through these functions, and they pull the
-// tenant's WooCommerce credentials from the vault (Rule 1 + Rule 3) — never
-// from env. The rest of the app passes an organizationId and gets typed results.
-import { getCredentialJSON } from '@/lib/vault';
+// Commerce adapter (public interface).
+// ----------------------------------------------------------------------------
+// These functions are CACHE-FIRST: they read the tenant's synced products from
+// the public.products table (populated by the Inngest sync job, which uses the
+// live client in ./woocommerce.ts). This keeps the app fast and avoids hammering
+// WooCommerce (Rule 4). The rest of the app calls these and never knows the
+// vendor (Rule 1). Reads are explicitly scoped by organization_id.
+import { createAdminClient } from '@/lib/supabase/admin';
 
 export type CommerceResult<T> =
   | { ok: true; data: T }
@@ -22,115 +25,124 @@ export interface Product {
   stockQuantity?: number;
   salesRank?: number;
   createdAt: string;
+  syncedAt: string;
 }
 
-// Shape of a 'woocommerce' credential stored in the vault (as JSON).
-export interface WooCommerceCredential {
-  storeUrl: string;
-  consumerKey: string;
-  consumerSecret: string;
+interface ProductRecord {
+  woocommerce_id: number;
+  title: string;
+  description: string | null;
+  image_url: string | null;
+  price: number | null;
+  stock_level: number | null;
+  stock_status: string | null;
+  category: string | null;
+  total_sales: number;
+  woo_created_at: string | null;
+  synced_at: string;
 }
 
-interface WooClient {
-  storeUrl: string;
-  authHeader: string;
-}
-
-// Resolve a tenant's WooCommerce client from the vault. Returns a typed failure
-// if the credential is missing — the app never sees a raw vendor/auth error.
-async function getWooClient(
-  organizationId: number,
-): Promise<CommerceResult<WooClient>> {
-  const cred = await getCredentialJSON<WooCommerceCredential>(
-    organizationId,
-    'woocommerce',
-  );
-  if (!cred) {
-    return { ok: false, error: 'No WooCommerce credential configured for this tenant' };
-  }
-  if (!cred.storeUrl || !cred.consumerKey || !cred.consumerSecret) {
-    return { ok: false, error: 'WooCommerce credential is incomplete' };
-  }
-  const token = Buffer.from(`${cred.consumerKey}:${cred.consumerSecret}`).toString('base64');
+function mapProduct(organizationId: number, r: ProductRecord): Product {
   return {
-    ok: true,
-    data: {
-      storeUrl: cred.storeUrl.replace(/\/+$/, ''),
-      authHeader: `Basic ${token}`,
-    },
-  };
-}
-
-interface WooProduct {
-  id: number;
-  name: string;
-  description: string;
-  price: string;
-  images?: { src: string }[];
-  categories?: { name: string }[];
-  stock_status: string;
-  stock_quantity: number | null;
-  date_created: string;
-}
-
-function mapProduct(organizationId: number, p: WooProduct): Product {
-  return {
-    id: `${organizationId}:${p.id}`,
+    id: `${organizationId}:${r.woocommerce_id}`,
     tenantId: String(organizationId),
-    externalId: String(p.id),
-    name: p.name,
-    description: p.description ?? '',
-    price: Number(p.price) || 0,
+    externalId: String(r.woocommerce_id),
+    name: r.title,
+    description: r.description ?? '',
+    price: r.price ?? 0,
     currency: 'ZAR',
-    imageUrls: (p.images ?? []).map((i) => i.src),
-    categories: (p.categories ?? []).map((c) => c.name),
-    inStock: p.stock_status === 'instock',
-    stockQuantity: p.stock_quantity ?? undefined,
-    createdAt: p.date_created,
+    imageUrls: r.image_url ? [r.image_url] : [],
+    categories: r.category ? r.category.split(', ') : [],
+    inStock: r.stock_status === 'instock',
+    stockQuantity: r.stock_level ?? undefined,
+    salesRank: r.total_sales,
+    createdAt: r.woo_created_at ?? '',
+    syncedAt: r.synced_at,
   };
 }
 
-export async function getProducts(
+const SELECT =
+  'woocommerce_id, title, description, image_url, price, stock_level, stock_status, category, total_sales, woo_created_at, synced_at';
+
+const PAGE = 1000; // PostgREST caps a single read at 1000 rows
+
+// Page through every product row for a tenant (catalogues can exceed 1000).
+async function selectAllRows<T>(
+  columns: string,
   organizationId: number,
-  opts: { perPage?: number; page?: number } = {},
-): Promise<CommerceResult<Product[]>> {
-  const client = await getWooClient(organizationId);
-  if (!client.ok) return client;
-
-  const perPage = opts.perPage ?? 20;
-  const page = opts.page ?? 1;
-  const url = `${client.data.storeUrl}/wp-json/wc/v3/products?per_page=${perPage}&page=${page}`;
-
-  try {
-    const res = await fetch(url, { headers: { Authorization: client.data.authHeader } });
-    if (!res.ok) {
-      return { ok: false, error: `WooCommerce responded ${res.status} ${res.statusText}` };
-    }
-    const raw = (await res.json()) as WooProduct[];
-    return { ok: true, data: raw.map((p) => mapProduct(organizationId, p)) };
-  } catch (err) {
-    return { ok: false, error: `WooCommerce request failed: ${(err as Error).message}` };
+  orderColumn: string,
+): Promise<{ data?: T[]; error?: string }> {
+  const admin = createAdminClient();
+  const all: T[] = [];
+  for (let from = 0; ; from += PAGE) {
+    const { data, error } = await admin
+      .from('products')
+      .select(columns)
+      .eq('organization_id', organizationId)
+      .order(orderColumn)
+      .range(from, from + PAGE - 1);
+    if (error) return { error: error.message };
+    all.push(...((data ?? []) as T[]));
+    if (!data || data.length < PAGE) break;
   }
+  return { data: all };
 }
 
-// The richer catalogue queries land in Module 3 (with the products sync table).
-// They follow the SAME vault-backed pattern as getProducts above.
+/** All cached products for a tenant (sorted by title). */
+export async function getProducts(organizationId: number): Promise<CommerceResult<Product[]>> {
+  const { data, error } = await selectAllRows<ProductRecord>(SELECT, organizationId, 'title');
+  if (error) return { ok: false, error };
+  return { ok: true, data: (data ?? []).map((r) => mapProduct(organizationId, r)) };
+}
+
+/** Top sellers by WooCommerce total_sales. */
 export async function getBestsellers(
-  _organizationId: number,
-  _limit?: number,
+  organizationId: number,
+  limit = 10,
 ): Promise<CommerceResult<Product[]>> {
-  throw new Error('getBestsellers: not implemented — wire in Module 3');
+  const admin = createAdminClient();
+  const { data, error } = await admin
+    .from('products')
+    .select(SELECT)
+    .eq('organization_id', organizationId)
+    .gt('total_sales', 0)
+    .order('total_sales', { ascending: false })
+    .limit(limit);
+  if (error) return { ok: false, error: error.message };
+  return { ok: true, data: (data ?? []).map((r) => mapProduct(organizationId, r as ProductRecord)) };
 }
 
+/** Current stock levels for a tenant's products. */
 export async function getStockLevels(
-  _organizationId: number,
+  organizationId: number,
 ): Promise<CommerceResult<Pick<Product, 'id' | 'inStock' | 'stockQuantity'>[]>> {
-  throw new Error('getStockLevels: not implemented — wire in Module 3');
+  const { data, error } = await selectAllRows<{
+    woocommerce_id: number;
+    stock_status: string | null;
+    stock_level: number | null;
+  }>('woocommerce_id, stock_status, stock_level', organizationId, 'woocommerce_id');
+  if (error) return { ok: false, error };
+  const rows = (data ?? []).map((r) => ({
+    id: `${organizationId}:${r.woocommerce_id}`,
+    inStock: r.stock_status === 'instock',
+    stockQuantity: r.stock_level ?? undefined,
+  }));
+  return { ok: true, data: rows };
 }
 
+/** Products created in WooCommerce within the last `sinceDays` days. */
 export async function getNewArrivals(
-  _organizationId: number,
-  _sinceDays?: number,
+  organizationId: number,
+  sinceDays = 30,
 ): Promise<CommerceResult<Product[]>> {
-  throw new Error('getNewArrivals: not implemented — wire in Module 3');
+  const since = new Date(Date.now() - sinceDays * 86_400_000).toISOString();
+  const admin = createAdminClient();
+  const { data, error } = await admin
+    .from('products')
+    .select(SELECT)
+    .eq('organization_id', organizationId)
+    .gte('woo_created_at', since)
+    .order('woo_created_at', { ascending: false });
+  if (error) return { ok: false, error: error.message };
+  return { ok: true, data: (data ?? []).map((r) => mapProduct(organizationId, r as ProductRecord)) };
 }
