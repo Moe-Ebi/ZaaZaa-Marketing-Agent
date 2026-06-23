@@ -10,7 +10,9 @@
     "typecheck": "tsc --noEmit",
     "db:migrate": "tsx scripts/migrate.ts",
     "db:seed": "tsx scripts/seed.ts",
-    "test:rls": "tsx scripts/test-rls.ts"
+    "test:rls": "tsx scripts/test-rls.ts",
+    "test:vault": "tsx scripts/test-vault.ts",
+    "test:refresh": "tsx scripts/test-refresh-job.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.0",
