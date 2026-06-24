@@ -287,6 +287,23 @@ export async function markItemPublishFailed(id: number, reason: string): Promise
   return toItem(data as Row);
 }
 
+export async function markItemAnalyzed(id: number): Promise<void> {
+  const admin = createAdminClient();
+  const { error } = await admin.from('content_items').update({ state: 'analyzed' }).eq('id', id);
+  if (error) throw new Error(`Failed to mark analyzed: ${error.message}`);
+}
+
+/** Distinct tenant ids that have at least one published content item. */
+export async function listOrgsWithPublishedContent(): Promise<number[]> {
+  const admin = createAdminClient();
+  const { data, error } = await admin
+    .from('content_items')
+    .select('organization_id')
+    .eq('state', 'published');
+  if (error) throw new Error(`Failed to list orgs with published content: ${error.message}`);
+  return [...new Set((data ?? []).map((r) => r.organization_id as number))];
+}
+
 /** Items whose scheduled time is due (scheduled_at <= now) across all tenants. */
 export async function listDueScheduledItems(nowIso: string): Promise<ContentItem[]> {
   const admin = createAdminClient();

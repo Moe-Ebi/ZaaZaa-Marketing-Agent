@@ -17,6 +17,7 @@
     "test:brand-voice": "tsx scripts/test-brand-voice.ts",
     "test:generation": "tsx scripts/test-generation.ts",
     "test:publish": "tsx scripts/test-publish.ts",
+    "test:analytics": "tsx scripts/test-analytics.ts",
     "test:generate-content": "tsx scripts/test-generate-content.ts"
   },
   "dependencies": {

@@ -5,6 +5,7 @@ import { refreshCredentials } from '@/lib/inngest/functions/refresh-credentials'
 import { syncWooCommerceProducts } from '@/lib/inngest/functions/sync-woocommerce-products';
 import { generateContent } from '@/lib/inngest/functions/generate-content';
 import { publishScheduledContent } from '@/lib/inngest/functions/publish-scheduled-content';
+import { ingestAnalytics } from '@/lib/inngest/functions/ingest-analytics';
 
 export const { GET, POST, PUT } = serve({
   client: inngest,
@@ -14,5 +15,6 @@ export const { GET, POST, PUT } = serve({
     syncWooCommerceProducts,
     generateContent,
     publishScheduledContent,
+    ingestAnalytics,
   ],
 });

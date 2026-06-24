@@ -11,7 +11,8 @@ export type GenerationEventType =
   | 'image'
   | 'video'
   | 'voiceover'
-  | 'assembly';
+  | 'assembly'
+  | 'analytics_pull';
 
 export type Platform = 'instagram' | 'tiktok' | 'facebook';
 

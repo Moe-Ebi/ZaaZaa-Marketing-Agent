@@ -9,8 +9,10 @@
 // ============================================================================
 import { createAdminClient } from '@/lib/supabase/admin';
 import { getCredentialJSON } from '@/lib/vault';
+import { recordUsage } from '@/lib/adapters/generation';
 import type { ContentItem } from '@/lib/content/types';
 import { publishPost as blotatoPublish, type PlatformTarget } from './blotato-client';
+import { getPostAnalytics, type PostMetrics } from './blotato-analytics';
 
 export type Platform = 'instagram' | 'tiktok' | 'facebook';
 export type PublicationStatus = 'scheduled' | 'published' | 'failed';
@@ -243,9 +245,83 @@ export async function listPublicationsByOrg(
 }
 
 // --- analytics (Module 9) ---------------------------------------------------
-export async function getAnalytics(
-  _postId: string,
-  _tenantId: string,
-): Promise<PublishingResult<never>> {
-  throw new Error('getAnalytics: not implemented — wire in Module 9');
+
+export interface PublishedPost {
+  publicationId: number;
+  contentItemId: number;
+  platform: Platform;
+  platformPostId: string;
+}
+
+/** All published posts for a tenant that have a platform post id to query. */
+export async function getPublishedPosts(organizationId: number): Promise<PublishedPost[]> {
+  const admin = createAdminClient();
+  const { data, error } = await admin
+    .from('publications')
+    .select('id, content_item_id, platform, platform_post_id')
+    .eq('organization_id', organizationId)
+    .eq('status', 'published')
+    .not('platform_post_id', 'is', null);
+  if (error) throw new Error(`Failed to list published posts: ${error.message}`);
+  return (data ?? []).map((r) => ({
+    publicationId: r.id as number,
+    contentItemId: r.content_item_id as number,
+    platform: r.platform as Platform,
+    platformPostId: r.platform_post_id as string,
+  }));
+}
+
+/** Metrics for a single post (typed pass-through to the analytics client). */
+export async function getAnalytics(postId: string): Promise<PublishingResult<PostMetrics>> {
+  const res = await getPostAnalytics(postId);
+  return res.ok ? { ok: true, data: res.data } : { ok: false, error: res.error };
+}
+
+/**
+ * Pull analytics for every published post and write one snapshot per post.
+ * Posts with no metrics yet (lag) are skipped and retried next run. Metered as
+ * 'analytics_pull'. Returns counts.
+ */
+export async function captureAnalytics(
+  organizationId: number,
+): Promise<PublishingResult<{ snapshots: number; skipped: number; itemIds: number[] }>> {
+  const admin = createAdminClient();
+  const posts = await getPublishedPosts(organizationId);
+
+  let snapshots = 0;
+  let skipped = 0;
+  const itemIds = new Set<number>();
+
+  for (const post of posts) {
+    const res = await getPostAnalytics(post.platformPostId);
+    if (!res.ok) {
+      skipped++;
+      continue;
+    }
+    const m = res.data;
+    const { error } = await admin.from('analytics_snapshots').insert({
+      organization_id: organizationId,
+      publication_id: post.publicationId,
+      platform: post.platform,
+      followers: m.followers,
+      engagement_rate: m.engagementRate,
+      reach: m.reach,
+      impressions: m.impressions,
+      views: m.views,
+      likes: m.likes,
+      comments: m.comments,
+      shares: m.shares,
+    });
+    if (error) {
+      skipped++;
+      continue;
+    }
+    snapshots++;
+    itemIds.add(post.contentItemId);
+  }
+
+  if (snapshots > 0) {
+    await recordUsage(organizationId, 'analytics_pull', snapshots, `${snapshots} posts`);
+  }
+  return { ok: true, data: { snapshots, skipped, itemIds: [...itemIds] } };
 }

@@ -2,6 +2,16 @@ import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { getTenantContext } from '@/lib/tenant/context';
 import { getBrandProfile } from '@/lib/brand';
+import { getAnalyticsKpis } from '@/lib/analytics';
+
+function timeAgo(iso: string): string {
+  const mins = Math.round((Date.now() - new Date(iso).getTime()) / 60000);
+  if (mins < 1) return 'just now';
+  if (mins < 60) return `${mins} min ago`;
+  const hrs = Math.round(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  return `${Math.round(hrs / 24)}d ago`;
+}
 
 export const dynamic = 'force-dynamic';
 
@@ -9,7 +19,10 @@ export default async function DashboardPage() {
   const ctx = await getTenantContext();
   if (!ctx) redirect('/login');
 
-  const profile = await getBrandProfile(ctx.tenantId);
+  const [profile, kpis] = await Promise.all([
+    getBrandProfile(ctx.tenantId),
+    getAnalyticsKpis(ctx.tenantId),
+  ]);
   const voice = profile?.voiceProfile;
   const summary =
     profile && (voice?.tone.length || voice?.personality)
@@ -20,7 +33,13 @@ export default async function DashboardPage() {
     <main className="mx-auto max-w-4xl space-y-6 p-8 text-zinc-50">
       <header className="space-y-1">
         <h1 className="text-2xl font-semibold">Dashboard</h1>
-        <p className="text-sm text-zinc-400">Tenant #{ctx.tenantId} · {ctx.email}</p>
+        <p className="text-sm text-zinc-400">
+          Tenant #{ctx.tenantId} · {ctx.email}
+          {' · '}
+          <span className="rounded bg-zinc-800 px-2 py-0.5 text-xs text-zinc-400">
+            Last analytics update: {kpis.lastRefresh ? timeAgo(kpis.lastRefresh) : 'never'}
+          </span>
+        </p>
       </header>
 
       <section className="rounded-xl border border-zinc-800 bg-zinc-900 p-5">
@@ -66,6 +85,10 @@ export default async function DashboardPage() {
         <Link href="/dashboard/history" className="rounded-xl border border-zinc-800 bg-zinc-900 p-4 hover:bg-zinc-800">
           <p className="font-medium">History</p>
           <p className="text-xs text-zinc-500">All content + states</p>
+        </Link>
+        <Link href="/dashboard/analytics" className="rounded-xl border border-zinc-800 bg-zinc-900 p-4 hover:bg-zinc-800">
+          <p className="font-medium">Analytics</p>
+          <p className="text-xs text-zinc-500">Performance &amp; growth</p>
         </Link>
         <Link href="/dashboard/products" className="rounded-xl border border-zinc-800 bg-zinc-900 p-4 hover:bg-zinc-800">
           <p className="font-medium">Products</p>
