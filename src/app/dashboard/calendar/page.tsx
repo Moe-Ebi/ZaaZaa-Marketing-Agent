@@ -4,6 +4,7 @@ import { getTenantContext } from '@/lib/tenant/context';
 import { listItemsByState } from '@/lib/content';
 import type { ContentItem } from '@/lib/content/types';
 import { ScheduleControl } from './ScheduleControl';
+import { PublishNowButton } from '../PublishNowButton';
 
 export const dynamic = 'force-dynamic';
 
@@ -70,13 +71,20 @@ export default async function CalendarPage() {
       <Section title={`Ready to schedule (${approved.length})`} empty="No approved items waiting.">
         {approved.map((item) => (
           <Row key={item.id} item={item}>
-            <ScheduleControl contentId={item.id} platforms={item.platforms.length ? item.platforms : (Object.keys(item.finalVideoUrls) as ContentItem['platforms'])} />
+            <div className="flex flex-col items-end gap-2">
+              <ScheduleControl contentId={item.id} platforms={item.platforms.length ? item.platforms : (Object.keys(item.finalVideoUrls) as ContentItem['platforms'])} />
+              <PublishNowButton contentId={item.id} />
+            </div>
           </Row>
         ))}
       </Section>
 
       <Section title={`Next 7 days (${next7.length})`} empty="Nothing scheduled this week.">
-        {next7.map((item) => <Row key={item.id} item={item} />)}
+        {next7.map((item) => (
+          <Row key={item.id} item={item}>
+            <PublishNowButton contentId={item.id} />
+          </Row>
+        ))}
       </Section>
 
       <Section title={`Next 30 days (${next30.length})`} empty="Nothing scheduled in the next month.">

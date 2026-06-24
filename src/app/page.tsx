@@ -18,6 +18,7 @@ export default function Home() {
           <p className="text-green-400 font-mono text-sm">✓ Module 5 — Generation adapters</p>
           <p className="text-green-400 font-mono text-sm">✓ Module 6 — Content pipeline</p>
           <p className="text-green-400 font-mono text-sm">✓ Module 7 — Approval, calendar & history</p>
+          <p className="text-green-400 font-mono text-sm">✓ Module 8 — Publishing (Blotato)</p>
         </div>
       </div>
     </main>

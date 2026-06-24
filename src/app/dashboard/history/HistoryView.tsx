@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react';
 import type { ContentItem, ContentState, ContentVariant } from '@/lib/content/types';
 import type { Platform } from '@/lib/adapters/generation';
+import type { PublicationRecord } from '@/lib/adapters/publishing';
 
 const STATES: (ContentState | 'all')[] = [
   'all', 'draft', 'generating', 'ready_for_review', 'waiting_for_credits',
@@ -13,9 +14,11 @@ const PLATFORMS: (Platform | 'all')[] = ['all', 'instagram', 'tiktok', 'facebook
 export function HistoryView({
   items,
   variantsByItem,
+  publicationsByItem,
 }: {
   items: ContentItem[];
   variantsByItem: Record<number, ContentVariant[]>;
+  publicationsByItem: Record<number, PublicationRecord[]>;
 }) {
   const [state, setState] = useState<ContentState | 'all'>('all');
   const [platform, setPlatform] = useState<Platform | 'all'>('all');
@@ -77,6 +80,7 @@ export function HistoryView({
                   platforms={ps}
                   expanded={expanded}
                   variants={variantsByItem[it.id] ?? []}
+                  publications={publicationsByItem[it.id] ?? []}
                   onToggle={() => setOpen(expanded ? null : it.id)}
                 />
               );
@@ -89,12 +93,13 @@ export function HistoryView({
 }
 
 function FragmentRow({
-  item, platforms, expanded, variants, onToggle,
+  item, platforms, expanded, variants, publications, onToggle,
 }: {
   item: ContentItem;
   platforms: string[];
   expanded: boolean;
   variants: ContentVariant[];
+  publications: PublicationRecord[];
   onToggle: () => void;
 }) {
   const script = item.script as { hook?: string; body?: string; cta?: string; hashtags?: string[] };
@@ -134,6 +139,16 @@ function FragmentRow({
                   Object.entries(item.finalVideoUrls).map(([p, u]) => (
                     <p key={p}><a href={u} target="_blank" rel="noreferrer" className="text-blue-400 hover:underline">{p} MP4 ↗</a></p>
                   ))}
+                <p className="mt-2 text-zinc-400">Publications</p>
+                {publications.length === 0 ? <p className="text-zinc-600">—</p> : publications.map((p) => (
+                  <p key={p.id}>
+                    <span className={p.status === 'published' ? 'text-green-400' : p.status === 'failed' ? 'text-red-400' : 'text-yellow-400'}>
+                      {p.platform}: {p.status}
+                    </span>
+                    {p.platformPostId ? <span className="text-zinc-500"> · {p.platformPostId.slice(0, 12)}…</span> : null}
+                    {p.errorMessage ? <span className="text-zinc-600" title={p.errorMessage}> · {p.errorMessage.slice(0, 40)}</span> : null}
+                  </p>
+                ))}
                 <p className="mt-2 text-zinc-500">Usage cost: per-item attribution arrives with billing (Module 10)</p>
                 {item.rejectionReason && <p className="text-red-400">Rejected: {item.rejectionReason}</p>}
               </div>

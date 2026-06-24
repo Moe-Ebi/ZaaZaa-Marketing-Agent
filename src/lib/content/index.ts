@@ -263,6 +263,43 @@ export async function scheduleItem(
   return toItem(data as Row);
 }
 
+export async function markItemPublished(id: number): Promise<ContentItem> {
+  const admin = createAdminClient();
+  const { data, error } = await admin
+    .from('content_items')
+    .update({ state: 'published', published_at: new Date().toISOString() })
+    .eq('id', id)
+    .select(SELECT)
+    .single();
+  if (error) throw new Error(`Failed to mark published: ${error.message}`);
+  return toItem(data as Row);
+}
+
+export async function markItemPublishFailed(id: number, reason: string): Promise<ContentItem> {
+  const admin = createAdminClient();
+  const { data, error } = await admin
+    .from('content_items')
+    .update({ state: 'failed_retryable', error: reason })
+    .eq('id', id)
+    .select(SELECT)
+    .single();
+  if (error) throw new Error(`Failed to mark publish-failed: ${error.message}`);
+  return toItem(data as Row);
+}
+
+/** Items whose scheduled time is due (scheduled_at <= now) across all tenants. */
+export async function listDueScheduledItems(nowIso: string): Promise<ContentItem[]> {
+  const admin = createAdminClient();
+  const { data, error } = await admin
+    .from('content_items')
+    .select(SELECT)
+    .eq('state', 'scheduled')
+    .lte('scheduled_at', nowIso)
+    .order('scheduled_at');
+  if (error) throw new Error(`Failed to list due items: ${error.message}`);
+  return (data ?? []).map((r) => toItem(r as Row));
+}
+
 export async function listVariants(contentItemId: number): Promise<ContentVariant[]> {
   const admin = createAdminClient();
   const { data, error } = await admin

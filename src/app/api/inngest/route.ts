@@ -4,8 +4,15 @@ import { helloWorld } from '@/lib/inngest/functions/hello-world';
 import { refreshCredentials } from '@/lib/inngest/functions/refresh-credentials';
 import { syncWooCommerceProducts } from '@/lib/inngest/functions/sync-woocommerce-products';
 import { generateContent } from '@/lib/inngest/functions/generate-content';
+import { publishScheduledContent } from '@/lib/inngest/functions/publish-scheduled-content';
 
 export const { GET, POST, PUT } = serve({
   client: inngest,
-  functions: [helloWorld, refreshCredentials, syncWooCommerceProducts, generateContent],
+  functions: [
+    helloWorld,
+    refreshCredentials,
+    syncWooCommerceProducts,
+    generateContent,
+    publishScheduledContent,
+  ],
 });

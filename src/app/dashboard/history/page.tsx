@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { getTenantContext } from '@/lib/tenant/context';
 import { listContentItems, listVariantsByOrg } from '@/lib/content';
+import { listPublicationsByOrg } from '@/lib/adapters/publishing';
 import { HistoryView } from './HistoryView';
 
 export const dynamic = 'force-dynamic';
@@ -10,9 +11,10 @@ export default async function HistoryPage() {
   const ctx = await getTenantContext();
   if (!ctx) redirect('/login');
 
-  const [items, variantsByItem] = await Promise.all([
+  const [items, variantsByItem, publicationsByItem] = await Promise.all([
     listContentItems(ctx.tenantId, 200),
     listVariantsByOrg(ctx.tenantId),
+    listPublicationsByOrg(ctx.tenantId),
   ]);
 
   return (
@@ -22,7 +24,7 @@ export default async function HistoryPage() {
         <h1 className="text-2xl font-semibold">Content History</h1>
         <p className="text-sm text-zinc-400">Tenant #{ctx.tenantId} · everything generated, in reverse order.</p>
       </header>
-      <HistoryView items={items} variantsByItem={variantsByItem} />
+      <HistoryView items={items} variantsByItem={variantsByItem} publicationsByItem={publicationsByItem} />
     </main>
   );
 }

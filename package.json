@@ -16,6 +16,7 @@
     "test:sync-products": "tsx scripts/test-sync-products.ts",
     "test:brand-voice": "tsx scripts/test-brand-voice.ts",
     "test:generation": "tsx scripts/test-generation.ts",
+    "test:publish": "tsx scripts/test-publish.ts",
     "test:generate-content": "tsx scripts/test-generate-content.ts"
   },
   "dependencies": {
