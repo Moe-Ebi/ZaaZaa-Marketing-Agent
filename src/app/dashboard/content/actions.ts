@@ -13,10 +13,14 @@ export async function triggerGenerate(
   const ctx = await requireTenantContext();
   const productIdRaw = formData.get('productId');
   const productId = productIdRaw ? Number(productIdRaw) : undefined;
+  const strategyRaw = String(formData.get('videoStrategy') ?? 'carousel');
+  const videoStrategy = (['carousel', 'lifestyle', 'product_motion'].includes(strategyRaw)
+    ? strategyRaw
+    : 'carousel') as 'carousel' | 'lifestyle' | 'product_motion';
   try {
     await inngest.send({
       name: 'content/generate.requested',
-      data: { organizationId: ctx.tenantId, ...(productId ? { productId } : {}) },
+      data: { organizationId: ctx.tenantId, videoStrategy, ...(productId ? { productId } : {}) },
     });
     return { ok: true, message: 'Generation queued — the item will appear and move through states.' };
   } catch (err) {

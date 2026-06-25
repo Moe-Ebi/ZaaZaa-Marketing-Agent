@@ -19,6 +19,15 @@ export function GenerateButton() {
       }}
       className="flex items-center gap-3"
     >
+      <select
+        name="videoStrategy"
+        defaultValue="carousel"
+        className="rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm outline-none focus:border-zinc-500"
+      >
+        <option value="carousel">Simple carousel</option>
+        <option value="lifestyle">Lifestyle video</option>
+        <option value="product_motion">Product motion</option>
+      </select>
       <button
         type="submit"
         disabled={pending}

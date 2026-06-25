@@ -19,6 +19,7 @@
     "test:publish": "tsx scripts/test-publish.ts",
     "test:analytics": "tsx scripts/test-analytics.ts",
     "test:planning": "tsx scripts/test-planning.ts",
+    "test:lifestyle-video": "tsx scripts/test-lifestyle-video.ts",
     "test:generate-content": "tsx scripts/test-generate-content.ts"
   },
   "dependencies": {

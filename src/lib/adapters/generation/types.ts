@@ -12,7 +12,11 @@ export type GenerationEventType =
   | 'video'
   | 'voiceover'
   | 'assembly'
-  | 'analytics_pull';
+  | 'analytics_pull'
+  | 'video_generation_higgsfield';
+
+// How a content item's visual is produced.
+export type VideoStrategy = 'carousel' | 'lifestyle' | 'product_motion';
 
 export type Platform = 'instagram' | 'tiktok' | 'facebook';
 

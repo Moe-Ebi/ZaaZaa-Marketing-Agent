@@ -55,8 +55,9 @@ const DAY = 86_400_000;
 export async function createPlanFromGeneration(
   organizationId: number,
   generation: PlanGeneration,
-  meta: { season: string; marketingFocus: string; tier: string; startDate: string },
+  meta: { season: string; marketingFocus: string; tier: string; startDate: string; videoStrategy?: string },
 ): Promise<number> {
+  const videoStrategy = meta.videoStrategy ?? 'carousel';
   const admin = createAdminClient();
   const start = new Date(meta.startDate);
   const end = new Date(start.getTime() + 90 * DAY);
@@ -103,6 +104,7 @@ export async function createPlanFromGeneration(
         platforms: it.platforms,
         scheduled_date: new Date(start.getTime() + it.scheduled_offset_days * DAY).toISOString().slice(0, 10),
         status: 'planned',
+        video_strategy: videoStrategy,
       }));
       if (rows.length > 0) {
         const { error: itErr } = await admin.from('planned_content_items').insert(rows);

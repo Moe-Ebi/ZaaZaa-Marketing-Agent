@@ -28,11 +28,13 @@ export const generateContent = inngest.createFunction(
     ],
   },
   async ({ event, step }) => {
-    const data = event?.data as { organizationId?: number; productId?: number } | undefined;
+    const data = event?.data as
+      | { organizationId?: number; productId?: number; videoStrategy?: 'carousel' | 'lifestyle' | 'product_motion' }
+      | undefined;
 
     if (data?.organizationId) {
       const item = await step.run(`generate-${data.organizationId}`, () =>
-        runContentGeneration(data.organizationId!, { productId: data.productId }),
+        runContentGeneration(data.organizationId!, { productId: data.productId, videoStrategy: data.videoStrategy }),
       );
       return { generated: 1, items: [{ id: item.id, state: item.state }] };
     }

@@ -18,6 +18,7 @@ const UNIT_COST: Record<GenerationEventType, (amount: number) => number> = {
   voiceover: (chars) => (chars / 1_000_000) * 15, // OpenAI TTS ~$15/1M chars
   assembly: (seconds) => (seconds / 60) * 0.4, // Shotstack ~$0.40/rendered min
   analytics_pull: () => 0, // wrapper analytics reads are not separately billed
+  video_generation_higgsfield: (seconds) => seconds * 0.08, // Higgsfield video ~ per-second
 };
 
 export interface AllowanceCheck {

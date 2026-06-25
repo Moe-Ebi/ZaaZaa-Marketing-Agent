@@ -20,9 +20,12 @@ import {
   generateVideo,
   generateVoiceover,
   assembleVideo,
+  generateLifestyleVideo,
   type Platform,
   type ScriptOutput,
+  type VideoStrategy,
 } from '@/lib/adapters/generation';
+import { assembleLifestyleReel } from '@/lib/services/video-assembly';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { createDraft, transitionState, addVariant } from './index';
 import { planContent, type PlanCandidate } from './plan';
@@ -32,6 +35,74 @@ const PLATFORMS: Platform[] = ['instagram', 'tiktok', 'facebook'];
 
 export interface PipelineOptions {
   productId?: number; // force a specific cached product (by products.id)
+  videoStrategy?: VideoStrategy; // carousel (default) | lifestyle | product_motion
+}
+
+// Produce the per-platform MP4s. For lifestyle/product_motion it generates a
+// Higgsfield video and assembles a reel; on ANY failure it falls back to the
+// Shotstack product-photo/video path so approval is never blocked.
+async function produceFinalVideos(
+  organizationId: number,
+  opts: {
+    strategy: VideoStrategy;
+    productName: string;
+    brandColors: string[];
+    hook: string;
+    cta: string;
+    imageUrl: string | null;
+    videoUrl: string | null;
+    voiceoverUrl: string | null;
+    platforms: Platform[];
+  },
+): Promise<{ finalVideoUrls: Partial<Record<Platform, string>>; errors: string[]; note: string | null }> {
+  if (opts.strategy !== 'carousel') {
+    const lv = await generateLifestyleVideo(organizationId, {
+      strategy: opts.strategy,
+      productName: opts.productName,
+      hook: opts.hook,
+      imageUrl: opts.imageUrl ?? undefined,
+      brandColors: opts.brandColors,
+    });
+    if (lv.ok) {
+      const reel = await assembleLifestyleReel(organizationId, {
+        videoUrl: lv.data.url,
+        durationSeconds: lv.data.durationSeconds,
+        hook: opts.hook,
+        cta: opts.cta,
+        voiceoverUrl: opts.voiceoverUrl ?? undefined,
+        platforms: opts.platforms,
+      });
+      if (reel.ok) return { finalVideoUrls: reel.urls, errors: reel.errors, note: `lifestyle video (${opts.strategy})` };
+    }
+    console.warn(`[pipeline] lifestyle video (${opts.strategy}) unavailable; falling back to Shotstack`);
+  }
+
+  const assets = opts.videoUrl
+    ? [{ type: 'video' as const, src: opts.videoUrl }]
+    : opts.imageUrl
+      ? [{ type: 'image' as const, src: opts.imageUrl, lengthSeconds: 4 }]
+      : [];
+  if (assets.length === 0) return { finalVideoUrls: {}, errors: ['no visual asset available'], note: null };
+
+  const renders = await Promise.all(
+    opts.platforms.map(async (platform) => {
+      const r = await assembleVideo(organizationId, {
+        platform,
+        assets,
+        captions: [opts.hook, opts.cta].filter(Boolean),
+        musicUrl: opts.voiceoverUrl ?? undefined,
+      });
+      return [platform, r] as const;
+    }),
+  );
+  const finalVideoUrls: Partial<Record<Platform, string>> = {};
+  const errors: string[] = [];
+  for (const [platform, r] of renders) {
+    if (r.ok) finalVideoUrls[platform] = r.data.url;
+    else errors.push(`${platform}: ${r.error}`);
+  }
+  const note = opts.strategy !== 'carousel' ? `${opts.strategy} fell back to Shotstack` : null;
+  return { finalVideoUrls, errors, note };
 }
 
 export async function runContentGeneration(
@@ -139,42 +210,33 @@ export async function runContentGeneration(
     if (vo.ok) voiceoverUrl = vo.data.url;
     else console.warn(`[pipeline] item ${item.id}: voiceover skipped (${vo.error})`);
 
-    if (!imageUrl && !videoUrl) {
+    const strategy = options.videoStrategy ?? 'carousel';
+    if (strategy === 'carousel' && !imageUrl && !videoUrl) {
       return transitionState(item.id, 'waiting_for_credits', {
         error: 'No visual asset available (AI generation blocked and no product photo)',
         script: primary.script,
       });
     }
 
-    // 3e. Assemble a per-platform MP4 (parallel renders).
-    const assets = videoUrl
-      ? [{ type: 'video' as const, src: videoUrl }]
-      : [{ type: 'image' as const, src: imageUrl!, lengthSeconds: 4 }];
-
-    const renders = await Promise.all(
-      PLATFORMS.map(async (platform) => {
-        const r = await assembleVideo(organizationId, {
-          platform,
-          assets,
-          captions: [primary.script.hook, primary.script.cta],
-          musicUrl: voiceoverUrl ?? undefined,
-        });
-        return [platform, r] as const;
-      }),
-    );
-
-    const finalVideoUrls: Partial<Record<Platform, string>> = {};
-    const renderErrors: string[] = [];
-    for (const [platform, r] of renders) {
-      if (r.ok) finalVideoUrls[platform] = r.data.url;
-      else renderErrors.push(`${platform}: ${r.error}`);
-    }
+    // 3e. Produce per-platform MP4s (lifestyle video if requested, else Shotstack).
+    const { finalVideoUrls, errors: renderErrors, note } = await produceFinalVideos(organizationId, {
+      strategy,
+      productName: product.name,
+      brandColors: (brand?.brandColors ?? []).map((c) => (typeof c === 'string' ? c : c.hex)),
+      hook: primary.script.hook,
+      cta: primary.script.cta,
+      imageUrl,
+      videoUrl,
+      voiceoverUrl,
+      platforms: PLATFORMS,
+    });
     if (Object.keys(finalVideoUrls).length === 0) {
       return transitionState(item.id, 'failed_retryable', {
-        error: `All assembly renders failed — ${renderErrors.join('; ')}`,
+        error: `All renders failed — ${renderErrors.join('; ')}`,
         script: primary.script,
       });
     }
+    if (note) degraded = degraded ? `${degraded}; ${note}` : note;
 
     // store variants
     for (const v of variantScripts) {
@@ -214,6 +276,7 @@ export interface PlannedPreset {
   hook: string;
   fullScript: string;
   platforms?: Platform[];
+  videoStrategy?: VideoStrategy;
 }
 
 export async function runPlannedGeneration(
@@ -266,29 +329,26 @@ export async function runPlannedGeneration(
     const vo = await generateVoiceover(organizationId, { text: primary.hook, tone: (brand?.voiceProfile.tone ?? []).join(', ') });
     if (vo.ok) voiceoverUrl = vo.data.url;
 
-    if (!imageUrl && !videoUrl) {
+    const strategy = preset.videoStrategy ?? 'carousel';
+    if (strategy === 'carousel' && !imageUrl && !videoUrl) {
       return transitionState(item.id, 'waiting_for_credits', { error: 'No visual asset available', script: primary });
     }
 
-    const assets = videoUrl
-      ? [{ type: 'video' as const, src: videoUrl }]
-      : [{ type: 'image' as const, src: imageUrl!, lengthSeconds: 4 }];
-
-    const renders = await Promise.all(
-      platforms.map(async (platform) => {
-        const r = await assembleVideo(organizationId, { platform, assets, captions: [primary.hook], musicUrl: voiceoverUrl ?? undefined });
-        return [platform, r] as const;
-      }),
-    );
-    const finalVideoUrls: Partial<Record<Platform, string>> = {};
-    const renderErrors: string[] = [];
-    for (const [platform, r] of renders) {
-      if (r.ok) finalVideoUrls[platform] = r.data.url;
-      else renderErrors.push(`${platform}: ${r.error}`);
-    }
+    const { finalVideoUrls, errors: renderErrors, note } = await produceFinalVideos(organizationId, {
+      strategy,
+      productName: product.name,
+      brandColors: (brand?.brandColors ?? []).map((c) => (typeof c === 'string' ? c : c.hex)),
+      hook: primary.hook,
+      cta: primary.cta,
+      imageUrl,
+      videoUrl,
+      voiceoverUrl,
+      platforms,
+    });
     if (Object.keys(finalVideoUrls).length === 0) {
       return transitionState(item.id, 'failed_retryable', { error: `All renders failed — ${renderErrors.join('; ')}`, script: primary });
     }
+    if (note) degraded = degraded ? `${degraded}; ${note}` : note;
 
     await addVariant({ contentItemId: item.id, organizationId, variantType: 'planned', hook: primary.hook, script: primary, imageUrl });
 

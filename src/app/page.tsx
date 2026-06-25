@@ -21,6 +21,7 @@ export default function Home() {
           <p className="text-green-400 font-mono text-sm">✓ Module 8 — Publishing (Blotato)</p>
           <p className="text-green-400 font-mono text-sm">✓ Module 9 — Analytics ingest &amp; dashboard</p>
           <p className="text-green-400 font-mono text-sm">✓ Module 10 — Strategic planning (Claude)</p>
+          <p className="text-green-400 font-mono text-sm">✓ Module 11 — Lifestyle video (Higgsfield)</p>
         </div>
       </div>
     </main>

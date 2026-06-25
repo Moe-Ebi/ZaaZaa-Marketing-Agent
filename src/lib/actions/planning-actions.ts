@@ -29,6 +29,7 @@ export async function generatePlan(
   season: string,
   marketingFocus: string,
   tier: BudgetTier,
+  videoStrategy: 'carousel' | 'lifestyle' | 'product_motion' = 'carousel',
 ): Promise<PlanActionResult> {
   const ctx = await requireTenantContext();
   if (!season.trim() || !marketingFocus.trim()) {
@@ -59,6 +60,7 @@ export async function generatePlan(
       marketingFocus,
       tier,
       startDate: new Date().toISOString().slice(0, 10),
+      videoStrategy,
     });
     revalidatePath('/dashboard/plans');
     return { ok: true, message: `Plan "${gen.data.plan_name}" generated.`, planId };

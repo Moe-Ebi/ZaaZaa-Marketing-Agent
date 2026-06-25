@@ -12,13 +12,14 @@ export function PlanCreator() {
   const [season, setSeason] = useState('');
   const [focus, setFocus] = useState('');
   const [tier, setTier] = useState<BudgetTier>('medium');
+  const [videoStrategy, setVideoStrategy] = useState<'carousel' | 'lifestyle' | 'product_motion'>('carousel');
   const [pending, startTransition] = useTransition();
   const [msg, setMsg] = useState<{ ok: boolean; text: string; planId?: number } | null>(null);
 
   function onGenerate() {
     setMsg(null);
     startTransition(async () => {
-      const res = await generatePlan(season, focus, tier);
+      const res = await generatePlan(season, focus, tier, videoStrategy);
       setMsg({ ok: res.ok, text: res.message, planId: res.planId });
     });
   }
@@ -37,6 +38,14 @@ export function PlanCreator() {
               <option value="small">Small (~1 post/week)</option>
               <option value="medium">Medium (~2 posts/week)</option>
               <option value="large">Large (~3 posts/week)</option>
+            </select>
+          </label>
+          <label className="space-y-1 text-sm">
+            <span className="text-zinc-400">Video strategy</span>
+            <select className={inputCls} value={videoStrategy} onChange={(e) => setVideoStrategy(e.target.value as typeof videoStrategy)}>
+              <option value="carousel">Simple carousel (Shotstack)</option>
+              <option value="lifestyle">Lifestyle video (Higgsfield text-to-video)</option>
+              <option value="product_motion">Product motion (image-to-video)</option>
             </select>
           </label>
         </div>

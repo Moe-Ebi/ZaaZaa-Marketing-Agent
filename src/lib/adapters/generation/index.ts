@@ -28,3 +28,6 @@ export type { VoiceoverInput } from './voiceover';
 
 export { assembleVideo } from './assembly';
 export type { AssemblyInput, AssemblyAsset } from './assembly';
+
+export { generateLifestyleVideo } from './lifestyle-video';
+export type { LifestyleVideoInput, LifestyleVideoOutput } from './lifestyle-video';

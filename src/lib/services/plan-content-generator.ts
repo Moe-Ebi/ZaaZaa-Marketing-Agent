@@ -27,7 +27,7 @@ export async function generateMonthContent(
 
   const { data: sections, error } = await admin
     .from('plan_sections')
-    .select('id, product_external_ids, planned_content_items(id, format, hook, full_script, platforms, status)')
+    .select('id, product_external_ids, planned_content_items(id, format, hook, full_script, platforms, status, video_strategy)')
     .eq('plan_id', planId)
     .eq('month', month);
   if (error) throw new Error(`Failed to load plan month: ${error.message}`);
@@ -54,6 +54,7 @@ export async function generateMonthContent(
           hook: (it.hook as string) ?? '',
           fullScript: (it.full_script as string) ?? '',
           platforms: (it.platforms ?? []) as PlanPlatform[],
+          videoStrategy: ((it.video_strategy as string) ?? 'carousel') as 'carousel' | 'lifestyle' | 'product_motion',
         });
 
         if (content.state === 'ready_for_review') {
