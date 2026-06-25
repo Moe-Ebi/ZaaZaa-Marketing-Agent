@@ -6,6 +6,7 @@ import { syncWooCommerceProducts } from '@/lib/inngest/functions/sync-woocommerc
 import { generateContent } from '@/lib/inngest/functions/generate-content';
 import { publishScheduledContent } from '@/lib/inngest/functions/publish-scheduled-content';
 import { ingestAnalytics } from '@/lib/inngest/functions/ingest-analytics';
+import { generatePlanMonth } from '@/lib/inngest/functions/generate-plan-month';
 
 export const { GET, POST, PUT } = serve({
   client: inngest,
@@ -16,5 +17,6 @@ export const { GET, POST, PUT } = serve({
     generateContent,
     publishScheduledContent,
     ingestAnalytics,
+    generatePlanMonth,
   ],
 });

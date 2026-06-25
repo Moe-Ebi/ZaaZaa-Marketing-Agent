@@ -91,11 +91,13 @@ export async function transitionState(
     videoUrl: string | null;
     voiceoverUrl: string | null;
     finalVideoUrls: Partial<Record<Platform, string>>;
+    platforms: Platform[];
     error: string | null;
   }> = {},
 ): Promise<ContentItem> {
   const admin = createAdminClient();
   const update: Record<string, unknown> = { state };
+  if (patch.platforms !== undefined) update.platforms = patch.platforms;
   if (patch.format !== undefined) update.format = patch.format;
   if (patch.hookAngle !== undefined) update.hook_angle = patch.hookAngle;
   if (patch.plan !== undefined) update.plan = patch.plan;

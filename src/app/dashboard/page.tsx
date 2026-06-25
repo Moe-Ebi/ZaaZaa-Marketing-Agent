@@ -90,6 +90,10 @@ export default async function DashboardPage() {
           <p className="font-medium">Analytics</p>
           <p className="text-xs text-zinc-500">Performance &amp; growth</p>
         </Link>
+        <Link href="/dashboard/plans" className="rounded-xl border border-zinc-800 bg-zinc-900 p-4 hover:bg-zinc-800">
+          <p className="font-medium">Plans</p>
+          <p className="text-xs text-zinc-500">3-month strategy (Claude)</p>
+        </Link>
         <Link href="/dashboard/products" className="rounded-xl border border-zinc-800 bg-zinc-900 p-4 hover:bg-zinc-800">
           <p className="font-medium">Products</p>
           <p className="text-xs text-zinc-500">WooCommerce catalogue</p>

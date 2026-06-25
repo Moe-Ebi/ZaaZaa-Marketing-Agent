@@ -203,6 +203,109 @@ export async function runContentGeneration(
   }
 }
 
+// ----------------------------------------------------------------------------
+// Plan-driven generation (Module 10): format / hook / script come pre-defined
+// from an approved marketing plan, so we SKIP SENSE + PLAN and jump straight to
+// GENERATE. Same resilient asset/assembly logic as the main pipeline.
+// ----------------------------------------------------------------------------
+export interface PlannedPreset {
+  productExternalId: string;
+  format: string;
+  hook: string;
+  fullScript: string;
+  platforms?: Platform[];
+}
+
+export async function runPlannedGeneration(
+  organizationId: number,
+  preset: PlannedPreset,
+): Promise<ContentItem> {
+  const draft = await createDraft(organizationId);
+  let item = await transitionState(draft.id, 'generating');
+  try {
+    const allRes = await getProducts(organizationId);
+    const all = allRes.ok ? allRes.data : [];
+    if (all.length === 0) {
+      return transitionState(item.id, 'failed_retryable', { error: 'No products in cache — run a WooCommerce sync first' });
+    }
+    const product = all.find((p) => p.externalId === preset.productExternalId) ?? all[0];
+    await linkProduct(item.id, organizationId, product.externalId);
+
+    const brand = await getBrandProfile(organizationId);
+    const platforms = preset.platforms && preset.platforms.length ? preset.platforms : PLATFORMS;
+
+    // Script is taken directly from the plan (pre-approved) — no PLAN step.
+    const primary: ScriptOutput = {
+      hook: preset.hook,
+      body: preset.fullScript,
+      cta: '',
+      hashtags: [],
+      content_type: preset.format,
+    };
+    item = await transitionState(item.id, 'generating', { format: preset.format, hookAngle: 'planned', script: primary });
+
+    // image (AI, fallback to product photo)
+    let imageUrl = product.imageUrls[0] ?? null;
+    let degraded: string | null = null;
+    const img = await generateImage(organizationId, {
+      prompt: `Lifestyle shot featuring ${product.name}`,
+      brandColors: (brand?.brandColors ?? []).map((c) => (typeof c === 'string' ? c : c.hex)),
+    });
+    if (img.ok) imageUrl = img.data.url;
+    else degraded = `AI image unavailable (${img.error}); used product photo`;
+
+    // video (best-effort)
+    let videoUrl: string | null = null;
+    if (imageUrl) {
+      const vid = await generateVideo(organizationId, { imageUrl, prompt: `Dynamic reveal of ${product.name}`, durationSeconds: 5 });
+      if (vid.ok) videoUrl = vid.data.url;
+    }
+
+    // voiceover (best-effort)
+    let voiceoverUrl: string | null = null;
+    const vo = await generateVoiceover(organizationId, { text: primary.hook, tone: (brand?.voiceProfile.tone ?? []).join(', ') });
+    if (vo.ok) voiceoverUrl = vo.data.url;
+
+    if (!imageUrl && !videoUrl) {
+      return transitionState(item.id, 'waiting_for_credits', { error: 'No visual asset available', script: primary });
+    }
+
+    const assets = videoUrl
+      ? [{ type: 'video' as const, src: videoUrl }]
+      : [{ type: 'image' as const, src: imageUrl!, lengthSeconds: 4 }];
+
+    const renders = await Promise.all(
+      platforms.map(async (platform) => {
+        const r = await assembleVideo(organizationId, { platform, assets, captions: [primary.hook], musicUrl: voiceoverUrl ?? undefined });
+        return [platform, r] as const;
+      }),
+    );
+    const finalVideoUrls: Partial<Record<Platform, string>> = {};
+    const renderErrors: string[] = [];
+    for (const [platform, r] of renders) {
+      if (r.ok) finalVideoUrls[platform] = r.data.url;
+      else renderErrors.push(`${platform}: ${r.error}`);
+    }
+    if (Object.keys(finalVideoUrls).length === 0) {
+      return transitionState(item.id, 'failed_retryable', { error: `All renders failed — ${renderErrors.join('; ')}`, script: primary });
+    }
+
+    await addVariant({ contentItemId: item.id, organizationId, variantType: 'planned', hook: primary.hook, script: primary, imageUrl });
+
+    return transitionState(item.id, 'ready_for_review', {
+      script: primary,
+      imageUrl,
+      videoUrl,
+      voiceoverUrl,
+      finalVideoUrls,
+      platforms,
+      error: degraded ?? (renderErrors.length ? renderErrors.join('; ') : null),
+    });
+  } catch (err) {
+    return transitionState(item.id, 'failed_retryable', { error: (err as Error).message });
+  }
+}
+
 function buildCandidates(
   all: Product[],
   bestIds: Set<string>,
