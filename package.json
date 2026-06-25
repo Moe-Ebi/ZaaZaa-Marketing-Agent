@@ -20,6 +20,7 @@
     "test:analytics": "tsx scripts/test-analytics.ts",
     "test:planning": "tsx scripts/test-planning.ts",
     "test:lifestyle-video": "tsx scripts/test-lifestyle-video.ts",
+    "test:higgsfield-mcp": "tsx scripts/test-higgsfield-mcp.ts",
     "test:generate-content": "tsx scripts/test-generate-content.ts"
   },
   "dependencies": {
