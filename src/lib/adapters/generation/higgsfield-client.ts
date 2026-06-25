@@ -58,6 +58,7 @@ async function submit(path: string, params: Record<string, unknown>): Promise<Hi
     const res = await fetch(`${BASE}${path}`, {
       method: 'POST',
       headers: headers.data,
+      // Higgsfield expects the inputs wrapped in a top-level `params` object.
       body: JSON.stringify({ params }),
     });
     const text = await res.text();
@@ -73,18 +74,37 @@ async function submit(path: string, params: Record<string, unknown>): Promise<Hi
   }
 }
 
+// Two image-model families share /v1/text2image/<model>, with different inputs:
+//   • Soul (text-to-image):  { prompt, width_and_height, quality, batch_size }
+//   • Nano Banana (img-edit): { prompt, input_images:[{type:'image_url',image_url}], aspect_ratio }
+// Discovered empirically (see scripts/probe-higgsfield.ts). Mode follows
+// HIGGSFIELD_IMAGE_MODE, else inferred from the configured path.
+const IMAGE_MODE = process.env.HIGGSFIELD_IMAGE_MODE ?? (IMAGE_PATH.includes('nano-banana') ? 'edit' : 'soul');
+
 export function submitImageJob(params: {
   prompt: string;
   width_and_height?: string;
   quality?: string;
   batch_size?: number;
   style_id?: string;
+  inputImageUrl?: string; // required by image-edit models (Nano Banana)
+  aspectRatio?: string;
 }): Promise<HiggsfieldResult<JobHandle>> {
+  if (IMAGE_MODE === 'edit') {
+    return submit(IMAGE_PATH, {
+      prompt: params.prompt,
+      input_images: params.inputImageUrl
+        ? [{ type: 'image_url', image_url: params.inputImageUrl }]
+        : [],
+      aspect_ratio: params.aspectRatio ?? '9:16',
+    });
+  }
   return submit(IMAGE_PATH, {
     width_and_height: '1536x1536',
     quality: '1080p',
     batch_size: 1,
-    ...params,
+    prompt: params.prompt,
+    ...(params.style_id ? { style_id: params.style_id } : {}),
   });
 }
 

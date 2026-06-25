@@ -181,6 +181,8 @@ export async function runContentGeneration(
     const img = await generateImage(organizationId, {
       prompt: `${plan.hook_angle} lifestyle shot featuring ${product.name}`,
       brandColors: (brand?.brandColors ?? []).map((c) => (typeof c === 'string' ? c : c.hex)),
+      inputImageUrl: product.imageUrls[0], // Nano Banana edits the real product photo
+      aspectRatio: '9:16',
     });
     if (img.ok) {
       imageUrl = img.data.url;
@@ -313,6 +315,8 @@ export async function runPlannedGeneration(
     const img = await generateImage(organizationId, {
       prompt: `Lifestyle shot featuring ${product.name}`,
       brandColors: (brand?.brandColors ?? []).map((c) => (typeof c === 'string' ? c : c.hex)),
+      inputImageUrl: product.imageUrls[0], // Nano Banana edits the real product photo
+      aspectRatio: '9:16',
     });
     if (img.ok) imageUrl = img.data.url;
     else degraded = `AI image unavailable (${img.error}); used product photo`;

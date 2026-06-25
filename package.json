@@ -23,6 +23,7 @@
     "test:generate-content": "tsx scripts/test-generate-content.ts"
   },
   "dependencies": {
+    "@higgsfield/client": "^0.2.1",
     "@supabase/ssr": "^0.12.0",
     "@supabase/supabase-js": "^2.108.2",
     "inngest": "^4.8.0",

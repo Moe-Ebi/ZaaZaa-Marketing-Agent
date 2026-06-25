@@ -1,16 +1,16 @@
 // ============================================================================
 // Higgsfield video client (private to the generation adapter).
 // ----------------------------------------------------------------------------
-// Text-to-video and image-to-video, async submit + exponential-backoff polling.
-// Auth: the brief asks for Bearer HIGGSFIELD_API_KEY, but this account is
-// validated to authenticate with `Key <KEY_ID>:<SECRET>` (Module 5). We prefer
-// Bearer if HIGGSFIELD_API_KEY is set, else fall back to the validated Key auth.
-// Endpoints are env-configurable. All failures are typed (auth, rate limit,
-// timeout, nsfw) so the pipeline can fall back to Shotstack.
+// image-to-video (DoP) + text-to-video, async submit + exponential-backoff
+// polling. Auth: validated `Key <KEY_ID>:<SECRET>` (Bearer HIGGSFIELD_API_KEY
+// honored if present). Endpoints are env-configurable; defaults are the routes
+// the API recognizes (see scripts/probe-higgsfield.ts). All failures are typed
+// (auth / rate_limit / timeout / nsfw / unknown) so the pipeline can fall back
+// to Shotstack.
 // ============================================================================
 
 const BASE = (process.env.HIGGSFIELD_API_URL ?? 'https://platform.higgsfield.ai').replace(/\/+$/, '');
-const T2V_PATH = process.env.HIGGSFIELD_T2V_PATH ?? '/v1/text2video';
+const T2V_PATH = process.env.HIGGSFIELD_T2V_PATH ?? '/v1/text2video'; // not served on this account
 const I2V_PATH = process.env.HIGGSFIELD_I2V_PATH ?? '/v1/image2video/dop';
 const STATUS_PATH = process.env.HIGGSFIELD_STATUS_PATH ?? '/v1/job-sets';
 
@@ -51,12 +51,12 @@ async function submit(path: string, params: Record<string, unknown>): Promise<Vi
     const res = await fetch(`${BASE}${path}`, {
       method: 'POST',
       headers: headers.data,
-      body: JSON.stringify({ params }),
+      body: JSON.stringify({ params }), // Higgsfield wraps inputs in `params`
     });
     const text = await res.text();
     if (!res.ok) return { ok: false, error: `Higgsfield ${path} ${res.status}: ${text.slice(0, 200)}`, kind: classify(res.status) };
     const body = (() => { try { return JSON.parse(text); } catch { return {}; } })() as Record<string, unknown>;
-    const id = (body.id ?? body.job_set_id ?? (body.job_set as Record<string, unknown>)?.id) as string | undefined;
+    const id = (body.id ?? body.job_set_id ?? (body.job_set as Record<string, unknown>)?.id ?? body.request_id) as string | undefined;
     if (!id) return { ok: false, error: `Higgsfield ${path}: no generation id`, kind: 'unknown' };
     return { ok: true, data: { generationId: id, statusUrl: `${BASE}${STATUS_PATH}/${id}` } };
   } catch (err) {
@@ -66,10 +66,10 @@ async function submit(path: string, params: Record<string, unknown>): Promise<Vi
 
 export function generateTextToVideo(
   prompt: string,
-  duration = 10,
-  resolution = '720p',
+  _duration = 10,
+  _resolution = '720p',
 ): Promise<VideoResult<VideoJob>> {
-  return submit(T2V_PATH, { prompt, duration, quality: resolution });
+  return submit(T2V_PATH, { prompt, duration: _duration, quality: _resolution });
 }
 
 export function generateImageToVideo(
@@ -78,7 +78,12 @@ export function generateImageToVideo(
   duration = 10,
   resolution = '720p',
 ): Promise<VideoResult<VideoJob>> {
-  return submit(I2V_PATH, { input_images: [imageUrl], prompt: motionPrompt, duration, quality: resolution });
+  return submit(I2V_PATH, {
+    prompt: motionPrompt,
+    input_images: [{ type: 'image_url', image_url: imageUrl }],
+    duration,
+    quality: resolution,
+  });
 }
 
 export async function pollVideoStatus(generationId: string): Promise<VideoResult<VideoStatus>> {

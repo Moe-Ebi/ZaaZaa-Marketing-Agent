@@ -8,6 +8,8 @@ export interface ImageInput {
   prompt: string;
   brandColors?: string[];
   size?: string; // e.g. "1536x1536"
+  inputImageUrl?: string; // source photo for image-edit models (Nano Banana)
+  aspectRatio?: string; // e.g. "9:16" for image-edit models
 }
 
 export async function generateImage(
@@ -27,6 +29,8 @@ export async function generateImage(
     width_and_height: input.size ?? '1536x1536',
     quality: '1080p',
     batch_size: 1,
+    inputImageUrl: input.inputImageUrl,
+    aspectRatio: input.aspectRatio,
   });
   if (!submitted.ok) return { ok: false, error: submitted.error };
 

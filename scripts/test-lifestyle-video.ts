@@ -55,7 +55,7 @@ async function main() {
   check('returns typed result, no throw', typeof t2v.ok === 'boolean', t2v.ok ? 'submitted' : `${t2v.kind}: ${t2v.error?.slice(0, 60)}`);
 
   console.log('\ngenerateLifestyleVideo (live attempt):');
-  const lv = await generateLifestyleVideo(orgId, { strategy: 'lifestyle', productName: product!.title as string, hook: 'Step into summer' });
+  const lv = await generateLifestyleVideo(orgId, { strategy: 'product_motion', productName: product!.title as string, hook: 'Step into summer' });
   check('graceful typed error or success', typeof lv.ok === 'boolean', lv.ok ? lv.data.url : lv.error.slice(0, 70));
 
   // --- 3. Reel assembly (real Shotstack from a sample video) ---
