@@ -13,11 +13,11 @@ export default async function BrandProfilePage() {
   const profile = await getBrandProfile(ctx.tenantId);
 
   return (
-    <main className="mx-auto max-w-4xl space-y-6 p-8 text-zinc-50">
+    <main className="mx-auto max-w-4xl space-y-6 p-8 text-ink">
       <header className="space-y-1">
-        <Link href="/dashboard" className="text-sm text-zinc-500 hover:text-zinc-300">← Dashboard</Link>
+        <Link href="/dashboard" className="text-sm text-subtle hover:text-muted">← Dashboard</Link>
         <h1 className="text-2xl font-semibold">Brand Profile</h1>
-        <p className="text-sm text-zinc-400">
+        <p className="text-sm text-muted">
           Tenant #{ctx.tenantId}. The voice profile is the source of truth every content generation reads.
         </p>
       </header>

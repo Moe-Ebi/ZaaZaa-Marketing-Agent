@@ -61,7 +61,7 @@ function toBrandProfile(e: Editable): BrandProfile {
 }
 
 const inputCls =
-  'w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm outline-none focus:border-zinc-500';
+  'w-full rounded-lg border border-line bg-canvas px-3 py-2 text-sm outline-none focus:border-brand/60';
 
 export function BrandProfileEditor({ initialProfile }: { initialProfile: StoredBrandProfile | null }) {
   const [pastContent, setPastContent] = useState('');
@@ -115,24 +115,24 @@ export function BrandProfileEditor({ initialProfile }: { initialProfile: StoredB
   return (
     <div className="space-y-8">
       {/* 1. Source material */}
-      <section className="space-y-3 rounded-xl border border-zinc-800 bg-zinc-900 p-5">
+      <section className="space-y-3 rounded-xl border border-line bg-surface p-5">
         <h2 className="font-medium">1. Source material</h2>
         <label className="block space-y-1 text-sm">
-          <span className="text-zinc-400">Brand name</span>
+          <span className="text-muted">Brand name</span>
           <input className={inputCls} value={edit.brandName} onChange={(e) => set('brandName', e.target.value)} />
         </label>
         <label className="block space-y-1 text-sm">
-          <span className="text-zinc-400">Past content — 3–5 old posts/captions (separate with a blank line or ---)</span>
+          <span className="text-muted">Past content — 3–5 old posts/captions (separate with a blank line or ---)</span>
           <textarea className={`${inputCls} font-mono text-xs`} rows={6} value={pastContent} onChange={(e) => setPastContent(e.target.value)} />
         </label>
         <label className="block space-y-1 text-sm">
-          <span className="text-zinc-400">Brand guidelines (tone, values, do/don&apos;t, audience…)</span>
+          <span className="text-muted">Brand guidelines (tone, values, do/don&apos;t, audience…)</span>
           <textarea className={`${inputCls} font-mono text-xs`} rows={5} value={guidelines} onChange={(e) => setGuidelines(e.target.value)} />
         </label>
         <button
           onClick={onAnalyze}
           disabled={pending}
-          className="rounded-lg bg-indigo-500 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-400 disabled:opacity-50"
+          className="rounded-lg bg-brand px-4 py-2 text-sm font-medium text-brand-ink hover:bg-brand-strong disabled:opacity-50"
         >
           {pending ? 'Analyzing…' : 'Analyze & Generate Profile'}
         </button>
@@ -140,9 +140,9 @@ export function BrandProfileEditor({ initialProfile }: { initialProfile: StoredB
 
       {/* 2. Editable profile */}
       {hasProfile && (
-        <section className="space-y-3 rounded-xl border border-zinc-800 bg-zinc-900 p-5">
+        <section className="space-y-3 rounded-xl border border-line bg-surface p-5">
           <h2 className="font-medium">2. Brand voice profile (editable)</h2>
-          <p className="text-xs text-zinc-500">Comma-separate list fields. Tweak anything, then save.</p>
+          <p className="text-xs text-subtle">Comma-separate list fields. Tweak anything, then save.</p>
 
           <div className="grid gap-3 sm:grid-cols-2">
             <Field label="Personality" value={edit.personality} onChange={(v) => set('personality', v)} />
@@ -157,11 +157,11 @@ export function BrandProfileEditor({ initialProfile }: { initialProfile: StoredB
 
           <div className="grid gap-3 sm:grid-cols-2">
             <label className="block space-y-1 text-sm">
-              <span className="text-zinc-400">Do rules (one per line)</span>
+              <span className="text-muted">Do rules (one per line)</span>
               <textarea className={inputCls} rows={3} value={edit.doRules} onChange={(e) => set('doRules', e.target.value)} />
             </label>
             <label className="block space-y-1 text-sm">
-              <span className="text-zinc-400">Don&apos;t rules (one per line)</span>
+              <span className="text-muted">Don&apos;t rules (one per line)</span>
               <textarea className={inputCls} rows={3} value={edit.dontRules} onChange={(e) => set('dontRules', e.target.value)} />
             </label>
           </div>
@@ -169,7 +169,7 @@ export function BrandProfileEditor({ initialProfile }: { initialProfile: StoredB
           <button
             onClick={onSave}
             disabled={pending}
-            className="rounded-lg bg-zinc-50 px-4 py-2 text-sm font-medium text-zinc-950 hover:bg-zinc-200 disabled:opacity-50"
+            className="rounded-lg bg-brand px-4 py-2 text-sm font-medium text-brand-ink hover:bg-brand-strong disabled:opacity-50"
           >
             {pending ? 'Saving…' : 'Save Profile'}
           </button>
@@ -177,7 +177,7 @@ export function BrandProfileEditor({ initialProfile }: { initialProfile: StoredB
       )}
 
       {msg && (
-        <p className={`text-sm ${msg.ok ? 'text-green-400' : 'text-red-400'}`}>{msg.text}</p>
+        <p className={`text-sm ${msg.ok ? 'text-success' : 'text-danger'}`}>{msg.text}</p>
       )}
     </div>
   );
@@ -186,7 +186,7 @@ export function BrandProfileEditor({ initialProfile }: { initialProfile: StoredB
 function Field({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
   return (
     <label className="block space-y-1 text-sm">
-      <span className="text-zinc-400">{label}</span>
+      <span className="text-muted">{label}</span>
       <input className={inputCls} value={value} onChange={(e) => onChange(e.target.value)} />
     </label>
   );

@@ -14,7 +14,7 @@ export default async function PlanViewPage({ params }: { params: Promise<{ planI
   if (!plan) notFound();
 
   return (
-    <main className="mx-auto max-w-4xl p-8 text-zinc-50">
+    <main className="mx-auto max-w-4xl p-8 text-ink">
       <PlanView plan={plan} />
     </main>
   );

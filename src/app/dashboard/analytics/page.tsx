@@ -16,8 +16,8 @@ const pct = (r: number) => `${(r * 100).toFixed(1)}%`;
 
 function Kpi({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-4">
-      <p className="text-xs uppercase tracking-wide text-zinc-500">{label}</p>
+    <div className="rounded-xl border border-line bg-surface p-4">
+      <p className="text-xs uppercase tracking-wide text-subtle">{label}</p>
       <p className="mt-1 text-2xl font-semibold">{value}</p>
     </div>
   );
@@ -25,7 +25,7 @@ function Kpi({ label, value }: { label: string; value: string }) {
 
 function LineChart({ points }: { points: FollowerPoint[] }) {
   const W = 640, H = 200, P = 28;
-  if (points.length === 0) return <p className="text-sm text-zinc-600">No follower data yet.</p>;
+  if (points.length === 0) return <p className="text-sm text-subtle">No follower data yet.</p>;
   const xs = points.map((_, i) => i);
   const ys = points.map((p) => p.followers);
   const maxY = Math.max(...ys, 1);
@@ -59,11 +59,11 @@ export default async function AnalyticsPage() {
   const maxEng = Math.max(...engagement.map((e) => e.engagementRate), 0.0001);
 
   return (
-    <main className="mx-auto max-w-5xl space-y-8 p-8 text-zinc-50">
+    <main className="mx-auto max-w-5xl space-y-8 p-8 text-ink">
       <header className="space-y-1">
-        <Link href="/dashboard" className="text-sm text-zinc-500 hover:text-zinc-300">← Dashboard</Link>
+        <Link href="/dashboard" className="text-sm text-subtle hover:text-muted">← Dashboard</Link>
         <h1 className="text-2xl font-semibold">Analytics</h1>
-        <p className="text-sm text-zinc-400">
+        <p className="text-sm text-muted">
           Tenant #{ctx.tenantId}
           {kpis.lastRefresh
             ? ` · last update ${new Date(kpis.lastRefresh).toLocaleString()} · ${kpis.snapshotCount} snapshots`
@@ -72,9 +72,9 @@ export default async function AnalyticsPage() {
       </header>
 
       {kpis.snapshotCount === 0 && (
-        <p className="rounded-xl border border-zinc-800 bg-zinc-900 p-6 text-center text-zinc-500">
+        <p className="rounded-xl border border-line bg-surface p-6 text-center text-subtle">
           No analytics yet. Once posts are published and the ingest cron runs (or you trigger
-          <code className="mx-1 rounded bg-zinc-800 px-1">analytics/ingest.requested</code>), metrics appear here.
+          <code className="mx-1 rounded bg-surface-2 px-1">analytics/ingest.requested</code>), metrics appear here.
         </p>
       )}
 
@@ -85,25 +85,25 @@ export default async function AnalyticsPage() {
         <Kpi label="Impressions" value={fmt.format(kpis.totalImpressions)} />
       </section>
 
-      <section className="space-y-2 rounded-xl border border-zinc-800 bg-zinc-900 p-5">
-        <h2 className="text-sm font-medium text-zinc-300">Follower growth</h2>
+      <section className="space-y-2 rounded-xl border border-line bg-surface p-5">
+        <h2 className="text-sm font-medium text-muted">Follower growth</h2>
         <LineChart points={series} />
       </section>
 
-      <section className="space-y-3 rounded-xl border border-zinc-800 bg-zinc-900 p-5">
-        <h2 className="text-sm font-medium text-zinc-300">Engagement rate by platform</h2>
+      <section className="space-y-3 rounded-xl border border-line bg-surface p-5">
+        <h2 className="text-sm font-medium text-muted">Engagement rate by platform</h2>
         {engagement.length === 0 ? (
-          <p className="text-sm text-zinc-600">No data yet.</p>
+          <p className="text-sm text-subtle">No data yet.</p>
         ) : (
           <div className="space-y-2">
             {engagement.map((e) => (
               <div key={e.platform} className="flex items-center gap-3 text-sm">
-                <span className="w-20 capitalize text-zinc-400">{e.platform}</span>
-                <div className="h-4 flex-1 overflow-hidden rounded bg-zinc-800">
-                  <div className="h-full bg-indigo-500" style={{ width: `${(e.engagementRate / maxEng) * 100}%` }} />
+                <span className="w-20 capitalize text-muted">{e.platform}</span>
+                <div className="h-4 flex-1 overflow-hidden rounded bg-surface-2">
+                  <div className="h-full bg-brand" style={{ width: `${(e.engagementRate / maxEng) * 100}%` }} />
                 </div>
-                <span className="w-16 text-right font-mono text-zinc-300">{pct(e.engagementRate)}</span>
-                <span className="w-16 text-right text-xs text-zinc-500">{e.posts} posts</span>
+                <span className="w-16 text-right font-mono text-muted">{pct(e.engagementRate)}</span>
+                <span className="w-16 text-right text-xs text-subtle">{e.posts} posts</span>
               </div>
             ))}
           </div>
@@ -111,24 +111,24 @@ export default async function AnalyticsPage() {
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-sm font-medium text-zinc-300">Top posts by engagement</h2>
+        <h2 className="text-sm font-medium text-muted">Top posts by engagement</h2>
         {top.length === 0 ? (
-          <p className="text-sm text-zinc-600">No published posts with analytics yet.</p>
+          <p className="text-sm text-subtle">No published posts with analytics yet.</p>
         ) : (
           <div className="space-y-2">
             {top.map((p, i) => (
-              <div key={`${p.contentItemId}-${p.platform}-${i}`} className="flex items-center gap-3 rounded-lg border border-zinc-800 bg-zinc-900 p-3">
+              <div key={`${p.contentItemId}-${p.platform}-${i}`} className="flex items-center gap-3 rounded-lg border border-line bg-surface p-3">
                 {p.imageUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={p.imageUrl} alt="" className="h-12 w-12 rounded object-cover" />
                 ) : (
-                  <div className="h-12 w-12 rounded bg-zinc-800" />
+                  <div className="h-12 w-12 rounded bg-surface-2" />
                 )}
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm text-zinc-200" title={p.hook}>{p.hook}</p>
-                  <p className="text-xs text-zinc-500 capitalize">{p.platform} · {pct(p.engagementRate)} engagement</p>
+                  <p className="truncate text-sm text-ink" title={p.hook}>{p.hook}</p>
+                  <p className="text-xs text-subtle capitalize">{p.platform} · {pct(p.engagementRate)} engagement</p>
                 </div>
-                <div className="text-right text-xs text-zinc-400">
+                <div className="text-right text-xs text-muted">
                   <p>{fmt.format(p.views)} views</p>
                   <p>{fmt.format(p.likes)}♥ · {fmt.format(p.comments)}💬 · {fmt.format(p.shares)}↗</p>
                 </div>

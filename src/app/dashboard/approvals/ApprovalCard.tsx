@@ -26,7 +26,7 @@ function defaultCaption(item: ContentItem): string {
     .join('\n\n');
 }
 
-const inputCls = 'w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm outline-none focus:border-zinc-500';
+const inputCls = 'w-full rounded-lg border border-line bg-canvas px-3 py-2 text-sm outline-none focus:border-brand/60';
 
 export function ApprovalCard({ item, variants }: { item: ContentItem; variants: ContentVariant[] }) {
   const router = useRouter();
@@ -60,11 +60,11 @@ export function ApprovalCard({ item, variants }: { item: ContentItem; variants: 
   }
 
   return (
-    <article className="space-y-4 rounded-xl border border-zinc-800 bg-zinc-900 p-5">
+    <article className="space-y-4 rounded-xl border border-line bg-surface p-5">
       <header className="flex items-center justify-between">
         <div>
           <h3 className="font-medium">Item #{item.id} · {item.format ?? 'post'}</h3>
-          <p className="text-xs text-zinc-500">Angle: {item.hookAngle ?? '—'}</p>
+          <p className="text-xs text-subtle">Angle: {item.hookAngle ?? '—'}</p>
         </div>
         {item.error && <span className="text-xs text-orange-400" title={item.error}>⚠ degraded</span>}
       </header>
@@ -74,15 +74,15 @@ export function ApprovalCard({ item, variants }: { item: ContentItem; variants: 
         {ALL_PLATFORMS.map((p) => {
           const url = item.finalVideoUrls[p];
           return (
-            <div key={p} className="rounded-lg border border-zinc-800 bg-zinc-950 p-2">
-              <p className="mb-1 text-xs font-medium uppercase text-zinc-400">{p}</p>
+            <div key={p} className="rounded-lg border border-line bg-canvas p-2">
+              <p className="mb-1 text-xs font-medium uppercase text-muted">{p}</p>
               {url ? (
                 <video src={url} poster={item.imageUrl ?? undefined} controls className="aspect-[9/16] w-full rounded bg-black object-cover" />
               ) : item.imageUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={item.imageUrl} alt={p} className="aspect-[9/16] w-full rounded object-cover" />
               ) : (
-                <div className="aspect-[9/16] w-full rounded bg-zinc-800" />
+                <div className="aspect-[9/16] w-full rounded bg-surface-2" />
               )}
             </div>
           );
@@ -90,19 +90,19 @@ export function ApprovalCard({ item, variants }: { item: ContentItem; variants: 
       </div>
 
       {/* Caption */}
-      <div className="rounded-lg border border-zinc-800 bg-zinc-950 p-3">
-        <p className="mb-1 text-xs font-medium text-zinc-400">Caption</p>
-        <p className="whitespace-pre-wrap text-sm text-zinc-200">{caption}</p>
+      <div className="rounded-lg border border-line bg-canvas p-3">
+        <p className="mb-1 text-xs font-medium text-muted">Caption</p>
+        <p className="whitespace-pre-wrap text-sm text-ink">{caption}</p>
       </div>
 
       {/* A/B variants */}
       {variants.length > 0 && (
         <div className="grid gap-3 sm:grid-cols-2">
           {variants.map((v) => (
-            <div key={v.id} className="rounded-lg border border-zinc-800 bg-zinc-950 p-3">
-              <p className="text-xs font-medium uppercase text-indigo-400">{v.variantType}</p>
-              <p className="mt-1 text-sm text-zinc-200">{v.hook}</p>
-              <p className="mt-1 text-xs text-zinc-500">Performance: — (Module 9)</p>
+            <div key={v.id} className="rounded-lg border border-line bg-canvas p-3">
+              <p className="text-xs font-medium uppercase text-brand">{v.variantType}</p>
+              <p className="mt-1 text-sm text-ink">{v.hook}</p>
+              <p className="mt-1 text-xs text-subtle">Performance: — (Module 9)</p>
             </div>
           ))}
         </div>
@@ -110,17 +110,17 @@ export function ApprovalCard({ item, variants }: { item: ContentItem; variants: 
 
       {/* Edit-before-publish */}
       {editing && (
-        <div className="space-y-2 rounded-lg border border-indigo-900 bg-indigo-950/30 p-3">
+        <div className="space-y-2 rounded-lg border border-brand/30 bg-brand/10 p-3">
           <label className="block space-y-1 text-sm">
-            <span className="text-zinc-400">Hook</span>
+            <span className="text-muted">Hook</span>
             <input className={inputCls} value={hook} onChange={(e) => setHook(e.target.value)} />
           </label>
           <label className="block space-y-1 text-sm">
-            <span className="text-zinc-400">Caption</span>
+            <span className="text-muted">Caption</span>
             <textarea className={inputCls} rows={4} value={caption} onChange={(e) => setCaption(e.target.value)} />
           </label>
           <label className="block space-y-1 text-sm">
-            <span className="text-zinc-400">Hashtags (comma-separated)</span>
+            <span className="text-muted">Hashtags (comma-separated)</span>
             <input className={inputCls} value={hashtags} onChange={(e) => setHashtags(e.target.value)} />
           </label>
           <button
@@ -134,7 +134,7 @@ export function ApprovalCard({ item, variants }: { item: ContentItem; variants: 
                 }),
               )
             }
-            className="rounded-lg bg-zinc-50 px-3 py-1.5 text-sm font-medium text-zinc-950 hover:bg-zinc-200 disabled:opacity-50"
+            className="rounded-lg bg-brand px-3 py-1.5 text-sm font-medium text-brand-ink hover:bg-brand-strong disabled:opacity-50"
           >
             Save edits
           </button>
@@ -143,11 +143,11 @@ export function ApprovalCard({ item, variants }: { item: ContentItem; variants: 
 
       {/* Platform selection */}
       <div className="flex flex-wrap items-center gap-3 text-sm">
-        <span className="text-zinc-400">Publish to:</span>
+        <span className="text-muted">Publish to:</span>
         {ALL_PLATFORMS.map((p) => (
           <label key={p} className="flex items-center gap-1.5">
             <input type="checkbox" checked={selected.includes(p)} onChange={() => togglePlatform(p)} />
-            <span className={selected.includes(p) ? 'text-zinc-200' : 'text-zinc-500'}>{p}</span>
+            <span className={selected.includes(p) ? 'text-ink' : 'text-subtle'}>{p}</span>
           </label>
         ))}
       </div>
@@ -183,18 +183,18 @@ export function ApprovalCard({ item, variants }: { item: ContentItem; variants: 
         <button
           disabled={pending}
           onClick={() => setRejecting((r) => !r)}
-          className="rounded-lg border border-red-700 px-4 py-2 text-sm text-red-300 hover:bg-red-950 disabled:opacity-50"
+          className="rounded-lg border border-red-700 px-4 py-2 text-sm text-danger hover:bg-red-950 disabled:opacity-50"
         >
           Reject
         </button>
         <button
           disabled={pending}
           onClick={() => setEditing((e) => !e)}
-          className="rounded-lg border border-zinc-600 px-4 py-2 text-sm hover:bg-zinc-800 disabled:opacity-50"
+          className="rounded-lg border border-line-strong px-4 py-2 text-sm hover:bg-surface-2 disabled:opacity-50"
         >
           {editing ? 'Close editor' : 'Edit'}
         </button>
-        {msg && <span className={`text-sm ${msg.ok ? 'text-green-400' : 'text-red-400'}`}>{msg.text}</span>}
+        {msg && <span className={`text-sm ${msg.ok ? 'text-success' : 'text-danger'}`}>{msg.text}</span>}
       </div>
     </article>
   );

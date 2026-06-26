@@ -15,10 +15,10 @@ export default async function CredentialsAdminPage() {
   ]);
 
   return (
-    <main className="mx-auto max-w-4xl space-y-8 p-8 text-zinc-50">
+    <main className="mx-auto max-w-4xl space-y-8 p-8 text-ink">
       <header className="space-y-1">
         <h1 className="text-2xl font-semibold">Credential Vault</h1>
-        <p className="text-sm text-zinc-400">
+        <p className="text-sm text-muted">
           Tenant #{ctx.tenantId} · operator: {ctx.email}. Values are encrypted at rest; only the
           last 4 characters are ever shown.
         </p>
@@ -28,9 +28,9 @@ export default async function CredentialsAdminPage() {
 
       <section className="space-y-3">
         <h2 className="font-medium">Active credentials</h2>
-        <div className="overflow-hidden rounded-xl border border-zinc-800">
+        <div className="overflow-hidden rounded-xl border border-line">
           <table className="w-full text-sm">
-            <thead className="bg-zinc-900 text-left text-zinc-400">
+            <thead className="bg-surface text-left text-muted">
               <tr>
                 <th className="px-4 py-2 font-medium">Type</th>
                 <th className="px-4 py-2 font-medium">Label</th>
@@ -42,17 +42,17 @@ export default async function CredentialsAdminPage() {
             <tbody>
               {credentials.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="px-4 py-6 text-center text-zinc-500">
+                  <td colSpan={5} className="px-4 py-6 text-center text-subtle">
                     No credentials yet — add one above.
                   </td>
                 </tr>
               )}
               {credentials.map((c) => (
-                <tr key={c.id} className="border-t border-zinc-800">
+                <tr key={c.id} className="border-t border-line">
                   <td className="px-4 py-2 font-mono">{c.credentialType}</td>
-                  <td className="px-4 py-2 text-zinc-400">{c.label ?? '—'}</td>
-                  <td className="px-4 py-2 font-mono text-zinc-300">{c.masked}</td>
-                  <td className="px-4 py-2 text-zinc-500">{new Date(c.updatedAt).toLocaleString()}</td>
+                  <td className="px-4 py-2 text-muted">{c.label ?? '—'}</td>
+                  <td className="px-4 py-2 font-mono text-muted">{c.masked}</td>
+                  <td className="px-4 py-2 text-subtle">{new Date(c.updatedAt).toLocaleString()}</td>
                   <td className="px-4 py-2">
                     <RotateForm credentialType={c.credentialType} />
                   </td>
@@ -65,9 +65,9 @@ export default async function CredentialsAdminPage() {
 
       <section className="space-y-3">
         <h2 className="font-medium">Audit log (latest 25)</h2>
-        <div className="overflow-hidden rounded-xl border border-zinc-800">
+        <div className="overflow-hidden rounded-xl border border-line">
           <table className="w-full text-sm">
-            <thead className="bg-zinc-900 text-left text-zinc-400">
+            <thead className="bg-surface text-left text-muted">
               <tr>
                 <th className="px-4 py-2 font-medium">When</th>
                 <th className="px-4 py-2 font-medium">Action</th>
@@ -78,12 +78,12 @@ export default async function CredentialsAdminPage() {
             </thead>
             <tbody>
               {audit.map((a) => (
-                <tr key={a.id} className="border-t border-zinc-800">
-                  <td className="px-4 py-2 text-zinc-500">{new Date(a.createdAt).toLocaleString()}</td>
+                <tr key={a.id} className="border-t border-line">
+                  <td className="px-4 py-2 text-subtle">{new Date(a.createdAt).toLocaleString()}</td>
                   <td className="px-4 py-2 font-mono">{a.action}</td>
-                  <td className="px-4 py-2 text-zinc-400">{a.credentialType ?? '—'}</td>
-                  <td className="px-4 py-2 text-zinc-500">{a.userId ? a.userId.slice(0, 8) : 'system'}</td>
-                  <td className="px-4 py-2 text-zinc-500">{a.detail ?? '—'}</td>
+                  <td className="px-4 py-2 text-muted">{a.credentialType ?? '—'}</td>
+                  <td className="px-4 py-2 text-subtle">{a.userId ? a.userId.slice(0, 8) : 'system'}</td>
+                  <td className="px-4 py-2 text-subtle">{a.detail ?? '—'}</td>
                 </tr>
               ))}
             </tbody>

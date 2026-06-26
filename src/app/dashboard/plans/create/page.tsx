@@ -10,11 +10,11 @@ export default async function CreatePlanPage() {
   if (!ctx) redirect('/login');
 
   return (
-    <main className="mx-auto max-w-3xl space-y-6 p-8 text-zinc-50">
+    <main className="mx-auto max-w-3xl space-y-6 p-8 text-ink">
       <header className="space-y-1">
-        <Link href="/dashboard/plans" className="text-sm text-zinc-500 hover:text-zinc-300">← Plans</Link>
+        <Link href="/dashboard/plans" className="text-sm text-subtle hover:text-muted">← Plans</Link>
         <h1 className="text-2xl font-semibold">New Marketing Plan</h1>
-        <p className="text-sm text-zinc-400">Tenant #{ctx.tenantId}</p>
+        <p className="text-sm text-muted">Tenant #{ctx.tenantId}</p>
       </header>
       <PlanCreator />
     </main>

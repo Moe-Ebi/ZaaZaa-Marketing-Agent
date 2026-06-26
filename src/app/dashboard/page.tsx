@@ -1,8 +1,10 @@
-import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { getTenantContext } from '@/lib/tenant/context';
+import { redirect } from 'next/navigation';
 import { getBrandProfile } from '@/lib/brand';
 import { getAnalyticsKpis } from '@/lib/analytics';
+import { listItemsByState } from '@/lib/content';
+import { PageHeader, Card, StatCard, Badge, SectionTitle } from '@/components/ui';
 
 function timeAgo(iso: string): string {
   const mins = Math.round((Date.now() - new Date(iso).getTime()) / 60000);
@@ -13,100 +15,79 @@ function timeAgo(iso: string): string {
   return `${Math.round(hrs / 24)}d ago`;
 }
 
+const fmt = new Intl.NumberFormat('en');
 export const dynamic = 'force-dynamic';
 
 export default async function DashboardPage() {
   const ctx = await getTenantContext();
   if (!ctx) redirect('/login');
 
-  const [profile, kpis] = await Promise.all([
+  const [profile, kpis, awaiting, scheduled] = await Promise.all([
     getBrandProfile(ctx.tenantId),
     getAnalyticsKpis(ctx.tenantId),
+    listItemsByState(ctx.tenantId, ['ready_for_review']),
+    listItemsByState(ctx.tenantId, ['scheduled']),
   ]);
   const voice = profile?.voiceProfile;
-  const summary =
-    profile && (voice?.tone.length || voice?.personality)
-      ? `${profile.brandName ?? 'Brand'}: ${voice?.tone.slice(0, 3).join(', ')}${voice?.personality ? ` — ${voice.personality}` : ''}`
-      : null;
+  const hasVoice = !!(voice && (voice.tone.length || voice.personality));
 
   return (
-    <main className="mx-auto max-w-4xl space-y-6 p-8 text-zinc-50">
-      <header className="space-y-1">
-        <h1 className="text-2xl font-semibold">Dashboard</h1>
-        <p className="text-sm text-zinc-400">
-          Tenant #{ctx.tenantId} · {ctx.email}
-          {' · '}
-          <span className="rounded bg-zinc-800 px-2 py-0.5 text-xs text-zinc-400">
-            Last analytics update: {kpis.lastRefresh ? timeAgo(kpis.lastRefresh) : 'never'}
-          </span>
-        </p>
-      </header>
+    <main className="mx-auto max-w-6xl space-y-8 p-6 sm:p-8">
+      <PageHeader
+        title="Dashboard"
+        description={
+          <>
+            Tenant #{ctx.tenantId} · analytics updated{' '}
+            <span className="text-ink">{kpis.lastRefresh ? timeAgo(kpis.lastRefresh) : 'never'}</span>
+          </>
+        }
+      />
 
-      <section className="rounded-xl border border-zinc-800 bg-zinc-900 p-5">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <h2 className="font-medium">Brand voice</h2>
-            {summary ? (
-              <p className="mt-1 text-sm text-zinc-300">{summary}</p>
-            ) : (
-              <p className="mt-1 text-sm text-zinc-500">No brand profile yet — set one up to power content generation.</p>
-            )}
-          </div>
-          <Link
-            href="/dashboard/brand-profile"
-            className="shrink-0 rounded-lg border border-zinc-600 px-3 py-1.5 text-sm hover:bg-zinc-800"
-          >
-            {summary ? 'Edit profile' : 'Set up profile'}
-          </Link>
-        </div>
-        {summary && voice && (
-          <div className="mt-4 grid gap-2 text-xs text-zinc-400 sm:grid-cols-2">
-            {voice.values.length > 0 && <p><span className="text-zinc-500">Values:</span> {voice.values.join(', ')}</p>}
-            {voice.content_themes.length > 0 && <p><span className="text-zinc-500">Themes:</span> {voice.content_themes.join(', ')}</p>}
-            {profile?.targetAudience && <p><span className="text-zinc-500">Audience:</span> {profile.targetAudience}</p>}
-            {voice.prohibition_keywords.length > 0 && <p><span className="text-zinc-500">Avoid:</span> {voice.prohibition_keywords.join(', ')}</p>}
-          </div>
-        )}
+      <section className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <StatCard label="Followers" value={fmt.format(kpis.totalFollowers)} />
+        <StatCard label="Avg engagement" value={`${(kpis.avgEngagementRate * 100).toFixed(1)}%`} />
+        <StatCard label="Awaiting review" value={awaiting.length} hint="in the approval queue" />
+        <StatCard label="Scheduled" value={scheduled.length} hint="upcoming posts" />
       </section>
 
-      <nav className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <Link href="/dashboard/content" className="rounded-xl border border-zinc-800 bg-zinc-900 p-4 hover:bg-zinc-800">
-          <p className="font-medium">Content</p>
-          <p className="text-xs text-zinc-500">Generate &amp; review</p>
-        </Link>
-        <Link href="/dashboard/approvals" className="rounded-xl border border-zinc-800 bg-zinc-900 p-4 hover:bg-zinc-800">
-          <p className="font-medium">Approvals</p>
-          <p className="text-xs text-zinc-500">Review &amp; approve</p>
-        </Link>
-        <Link href="/dashboard/calendar" className="rounded-xl border border-zinc-800 bg-zinc-900 p-4 hover:bg-zinc-800">
-          <p className="font-medium">Calendar</p>
-          <p className="text-xs text-zinc-500">Schedule &amp; upcoming</p>
-        </Link>
-        <Link href="/dashboard/history" className="rounded-xl border border-zinc-800 bg-zinc-900 p-4 hover:bg-zinc-800">
-          <p className="font-medium">History</p>
-          <p className="text-xs text-zinc-500">All content + states</p>
-        </Link>
-        <Link href="/dashboard/analytics" className="rounded-xl border border-zinc-800 bg-zinc-900 p-4 hover:bg-zinc-800">
-          <p className="font-medium">Analytics</p>
-          <p className="text-xs text-zinc-500">Performance &amp; growth</p>
-        </Link>
-        <Link href="/dashboard/plans" className="rounded-xl border border-zinc-800 bg-zinc-900 p-4 hover:bg-zinc-800">
-          <p className="font-medium">Plans</p>
-          <p className="text-xs text-zinc-500">3-month strategy (Claude)</p>
-        </Link>
-        <Link href="/dashboard/products" className="rounded-xl border border-zinc-800 bg-zinc-900 p-4 hover:bg-zinc-800">
-          <p className="font-medium">Products</p>
-          <p className="text-xs text-zinc-500">WooCommerce catalogue</p>
-        </Link>
-        <Link href="/dashboard/brand-profile" className="rounded-xl border border-zinc-800 bg-zinc-900 p-4 hover:bg-zinc-800">
-          <p className="font-medium">Brand Profile</p>
-          <p className="text-xs text-zinc-500">Voice & identity</p>
-        </Link>
-        <Link href="/admin/credentials" className="rounded-xl border border-zinc-800 bg-zinc-900 p-4 hover:bg-zinc-800">
-          <p className="font-medium">Credentials</p>
-          <p className="text-xs text-zinc-500">Vault (operator)</p>
-        </Link>
-      </nav>
+      <section className="grid gap-4 lg:grid-cols-3">
+        <Card className="lg:col-span-2">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <SectionTitle>Brand voice</SectionTitle>
+              {hasVoice ? (
+                <p className="mt-2 text-sm text-ink">
+                  <span className="font-medium">{profile?.brandName ?? 'Brand'}</span>
+                  {voice!.tone.length > 0 && <> · {voice!.tone.slice(0, 3).join(', ')}</>}
+                  {voice!.personality && <span className="text-muted"> — {voice!.personality}</span>}
+                </p>
+              ) : (
+                <p className="mt-2 text-sm text-muted">No brand profile yet — set one up to power every generation.</p>
+              )}
+            </div>
+            <Link href="/dashboard/brand-profile" className="btn-ghost btn-sm shrink-0">
+              {hasVoice ? 'Edit' : 'Set up'}
+            </Link>
+          </div>
+          {hasVoice && voice && (
+            <div className="mt-4 flex flex-wrap gap-2">
+              {voice.values.slice(0, 5).map((v) => <Badge key={v} tone="brand">{v}</Badge>)}
+              {voice.content_themes.slice(0, 4).map((t) => <Badge key={t}>{t}</Badge>)}
+            </div>
+          )}
+        </Card>
+
+        <Card>
+          <SectionTitle>Quick actions</SectionTitle>
+          <div className="mt-3 grid gap-2">
+            <Link href="/dashboard/content" className="btn-primary w-full">Generate content</Link>
+            <Link href="/dashboard/plans/create" className="btn-secondary w-full">New marketing plan</Link>
+            <Link href="/dashboard/approvals" className="btn-ghost w-full">
+              Review queue {awaiting.length > 0 && <Badge tone="info">{awaiting.length}</Badge>}
+            </Link>
+          </div>
+        </Card>
+      </section>
     </main>
   );
 }

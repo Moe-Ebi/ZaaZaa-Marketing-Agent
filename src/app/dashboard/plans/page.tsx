@@ -13,14 +13,14 @@ export default async function PlansPage() {
   const plans = await listPlans(ctx.tenantId);
 
   return (
-    <main className="mx-auto max-w-5xl space-y-6 p-8 text-zinc-50">
+    <main className="mx-auto max-w-5xl space-y-6 p-8 text-ink">
       <header className="flex items-start justify-between gap-4">
         <div className="space-y-1">
-          <Link href="/dashboard" className="text-sm text-zinc-500 hover:text-zinc-300">← Dashboard</Link>
+          <Link href="/dashboard" className="text-sm text-subtle hover:text-muted">← Dashboard</Link>
           <h1 className="text-2xl font-semibold">Marketing Plans</h1>
-          <p className="text-sm text-zinc-400">Tenant #{ctx.tenantId} · 3-month strategic plans generated with Claude.</p>
+          <p className="text-sm text-muted">Tenant #{ctx.tenantId} · 3-month strategic plans generated with Claude.</p>
         </div>
-        <Link href="/dashboard/plans/create" className="shrink-0 rounded-lg bg-zinc-50 px-4 py-2 text-sm font-medium text-zinc-950 hover:bg-zinc-200">
+        <Link href="/dashboard/plans/create" className="shrink-0 rounded-lg bg-brand px-4 py-2 text-sm font-medium text-brand-ink hover:bg-brand-strong">
           New plan
         </Link>
       </header>

@@ -14,19 +14,19 @@ export default async function ApprovalsPage() {
   const variantsByItem = await Promise.all(items.map((i) => listVariants(i.id)));
 
   return (
-    <main className="mx-auto max-w-4xl space-y-6 p-8 text-zinc-50">
+    <main className="mx-auto max-w-4xl space-y-6 p-8 text-ink">
       <header className="space-y-1">
-        <Link href="/dashboard" className="text-sm text-zinc-500 hover:text-zinc-300">← Dashboard</Link>
+        <Link href="/dashboard" className="text-sm text-subtle hover:text-muted">← Dashboard</Link>
         <h1 className="text-2xl font-semibold">Approval Queue</h1>
-        <p className="text-sm text-zinc-400">
+        <p className="text-sm text-muted">
           Tenant #{ctx.tenantId} · {items.length} item(s) awaiting review. Nothing goes live without approval.
         </p>
       </header>
 
       {items.length === 0 ? (
-        <p className="rounded-xl border border-zinc-800 bg-zinc-900 p-6 text-center text-zinc-500">
+        <p className="rounded-xl border border-line bg-surface p-6 text-center text-subtle">
           Nothing to review. Generate content from the{' '}
-          <Link href="/dashboard/content" className="text-indigo-400 hover:underline">Content</Link> page.
+          <Link href="/dashboard/content" className="text-brand hover:underline">Content</Link> page.
         </p>
       ) : (
         <div className="space-y-6">

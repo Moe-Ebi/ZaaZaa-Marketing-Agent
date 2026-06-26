@@ -27,7 +27,7 @@ export function PublishNowButton({ contentId }: { contentId: number }) {
       >
         {pending ? 'Publishing…' : 'Publish now'}
       </button>
-      {msg && <span className={`text-xs ${msg.ok ? 'text-green-400' : 'text-red-400'}`}>{msg.text}</span>}
+      {msg && <span className={`text-xs ${msg.ok ? 'text-success' : 'text-danger'}`}>{msg.text}</span>}
     </span>
   );
 }

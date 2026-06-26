@@ -1,26 +1,111 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* ============================================================================
+   ZaaZaa design system — warm-dark identity with a gold/amber brand accent
+   (drawn from Zaazaa's brand colours: charcoal + warm gold). Tokens below are
+   exposed as Tailwind utilities, e.g. bg-surface, text-muted, border-line,
+   bg-brand, text-brand.
+   ========================================================================== */
+@theme {
+  /* surfaces — warm near-black, layered */
+  --color-canvas: #0b0a0d;
+  --color-surface: #131118;
+  --color-surface-2: #1b1822;
+  --color-surface-3: #232029;
+  --color-line: #2c2935;
+  --color-line-strong: #3a3646;
+
+  /* text */
+  --color-ink: #f6f4f9;
+  --color-muted: #a59fb2;
+  --color-subtle: #756f82;
+
+  /* brand — warm gold */
+  --color-brand: #e6b24c;
+  --color-brand-strong: #f1c66e;
+  --color-brand-ink: #1c1505;
+
+  /* status */
+  --color-success: #5fd09b;
+  --color-warning: #e8b65a;
+  --color-danger: #f0788e;
+  --color-info: #7cb8f0;
+
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
+html { color-scheme: dark; }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background:
+    radial-gradient(1200px 600px at 100% -10%, rgba(230, 178, 76, 0.06), transparent 60%),
+    var(--color-canvas);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection { background: rgba(230, 178, 76, 0.25); }
+
+/* tasteful scrollbars */
+* { scrollbar-width: thin; scrollbar-color: var(--color-line-strong) transparent; }
+*::-webkit-scrollbar { width: 10px; height: 10px; }
+*::-webkit-scrollbar-thumb {
+  background: var(--color-line-strong);
+  border-radius: 9999px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+/* ----------------------------------------------------------------------------
+   Reusable component classes (same Tailwind-utility approach, centralized so
+   every page stays consistent).
+   -------------------------------------------------------------------------- */
+@layer components {
+  .card { @apply rounded-xl border border-line bg-surface; }
+  .card-2 { @apply rounded-lg border border-line bg-surface-2; }
+
+  .input {
+    @apply w-full rounded-lg border border-line bg-canvas px-3 py-2 text-sm text-ink outline-none transition
+           placeholder:text-subtle focus:border-brand/60 focus:ring-2 focus:ring-brand/15;
+  }
+  .label { @apply text-sm text-muted; }
+
+  .btn,
+  .btn-primary,
+  .btn-secondary,
+  .btn-ghost,
+  .btn-danger {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium
+           transition disabled:opacity-50 disabled:pointer-events-none;
+  }
+  .btn-primary { @apply bg-brand text-brand-ink hover:bg-brand-strong; }
+  .btn-secondary { @apply bg-surface-3 text-ink hover:bg-line-strong; }
+  .btn-ghost { @apply border border-line text-muted hover:bg-surface-2 hover:text-ink; }
+  .btn-danger { @apply bg-danger/15 text-danger hover:bg-danger/25; }
+  .btn-sm { @apply rounded-md px-2.5 py-1 text-xs; }
+
+  .badge {
+    @apply inline-flex items-center gap-1 rounded-full border border-line bg-surface-2 px-2 py-0.5 text-xs text-muted;
+  }
+
+  .nav-link {
+    @apply flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-muted transition
+           hover:bg-surface-2 hover:text-ink;
+  }
+  .nav-link-active { @apply bg-brand/10 text-brand hover:bg-brand/15 hover:text-brand; }
+
+  .table-head { @apply bg-surface-2 text-left text-xs uppercase tracking-wide text-subtle; }
+  .table-row { @apply border-t border-line; }
+}
+
+@keyframes shimmer { 100% { transform: translateX(100%); } }
+.skeleton { @apply relative overflow-hidden rounded-md bg-surface-2; }
+.skeleton::after {
+  content: "";
+  @apply absolute inset-0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.05), transparent);
+  transform: translateX(-100%);
+  animation: shimmer 1.5s infinite;
 }

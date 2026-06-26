@@ -27,34 +27,34 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-zinc-950 text-zinc-50 p-8">
-      <form onSubmit={onSubmit} className="w-full max-w-sm space-y-4 rounded-xl border border-zinc-800 bg-zinc-900 p-6">
+    <main className="flex min-h-screen items-center justify-center bg-canvas text-ink p-8">
+      <form onSubmit={onSubmit} className="w-full max-w-sm space-y-4 rounded-xl border border-line bg-surface p-6">
         <h1 className="text-xl font-semibold">ZaaZaa — Operator Login</h1>
         <div className="space-y-1">
-          <label className="text-sm text-zinc-400">Email</label>
+          <label className="text-sm text-muted">Email</label>
           <input
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            className="w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm outline-none focus:border-zinc-500"
+            className="w-full rounded-lg border border-line bg-canvas px-3 py-2 text-sm outline-none focus:border-brand/60"
           />
         </div>
         <div className="space-y-1">
-          <label className="text-sm text-zinc-400">Password</label>
+          <label className="text-sm text-muted">Password</label>
           <input
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
-            className="w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm outline-none focus:border-zinc-500"
+            className="w-full rounded-lg border border-line bg-canvas px-3 py-2 text-sm outline-none focus:border-brand/60"
           />
         </div>
-        {error && <p className="text-sm text-red-400">{error}</p>}
+        {error && <p className="text-sm text-danger">{error}</p>}
         <button
           type="submit"
           disabled={loading}
-          className="w-full rounded-lg bg-zinc-50 px-3 py-2 text-sm font-medium text-zinc-950 hover:bg-zinc-200 disabled:opacity-50"
+          className="w-full rounded-lg bg-brand px-3 py-2 text-sm font-medium text-brand-ink hover:bg-brand-strong disabled:opacity-50"
         >
           {loading ? 'Signing in…' : 'Sign in'}
         </button>

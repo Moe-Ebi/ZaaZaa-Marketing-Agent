@@ -30,7 +30,7 @@ export function ScheduleControl({ contentId, platforms }: { contentId: number; p
         type="datetime-local"
         value={when}
         onChange={(e) => setWhen(e.target.value)}
-        className="rounded-lg border border-zinc-700 bg-zinc-950 px-2 py-1.5 text-sm outline-none focus:border-zinc-500"
+        className="rounded-lg border border-line bg-canvas px-2 py-1.5 text-sm outline-none focus:border-brand/60"
       />
       <button
         disabled={pending}
@@ -39,7 +39,7 @@ export function ScheduleControl({ contentId, platforms }: { contentId: number; p
       >
         {pending ? 'Scheduling…' : 'Schedule'}
       </button>
-      {msg && <span className={`text-xs ${msg.ok ? 'text-green-400' : 'text-red-400'}`}>{msg.text}</span>}
+      {msg && <span className={`text-xs ${msg.ok ? 'text-success' : 'text-danger'}`}>{msg.text}</span>}
     </div>
   );
 }

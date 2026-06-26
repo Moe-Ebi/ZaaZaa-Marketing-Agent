@@ -16,12 +16,12 @@ export function SyncNowButton() {
       <button
         type="submit"
         disabled={pending}
-        className="rounded-lg bg-zinc-50 px-4 py-2 text-sm font-medium text-zinc-950 hover:bg-zinc-200 disabled:opacity-50"
+        className="rounded-lg bg-brand px-4 py-2 text-sm font-medium text-brand-ink hover:bg-brand-strong disabled:opacity-50"
       >
         {pending ? 'Queuing…' : 'Sync now'}
       </button>
       {state.message && (
-        <span className={`text-sm ${state.ok ? 'text-green-400' : 'text-red-400'}`}>{state.message}</span>
+        <span className={`text-sm ${state.ok ? 'text-success' : 'text-danger'}`}>{state.message}</span>
       )}
     </form>
   );
@@ -62,11 +62,11 @@ export function ProductsTable({ products }: { products: Product[] }) {
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         placeholder="Filter by title…"
-        className="w-full max-w-xs rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm outline-none focus:border-zinc-500"
+        className="w-full max-w-xs rounded-lg border border-line bg-canvas px-3 py-2 text-sm outline-none focus:border-brand/60"
       />
-      <div className="overflow-hidden rounded-xl border border-zinc-800">
+      <div className="overflow-hidden rounded-xl border border-line">
         <table className="w-full text-sm">
-          <thead className="bg-zinc-900 text-left text-zinc-400">
+          <thead className="bg-surface text-left text-muted">
             <tr>
               <th className="cursor-pointer px-4 py-2 font-medium" onClick={() => toggleSort('name')}>Title{arrow('name')}</th>
               <th className="cursor-pointer px-4 py-2 font-medium" onClick={() => toggleSort('price')}>Price{arrow('price')}</th>
@@ -77,21 +77,21 @@ export function ProductsTable({ products }: { products: Product[] }) {
           </thead>
           <tbody>
             {rows.length === 0 && (
-              <tr><td colSpan={5} className="px-4 py-6 text-center text-zinc-500">No products — run a sync.</td></tr>
+              <tr><td colSpan={5} className="px-4 py-6 text-center text-subtle">No products — run a sync.</td></tr>
             )}
             {rows.map((p) => (
-              <tr key={p.id} className="border-t border-zinc-800">
+              <tr key={p.id} className="border-t border-line">
                 <td className="px-4 py-2">{p.name}</td>
                 <td className="px-4 py-2 font-mono">R{p.price.toFixed(2)}</td>
                 <td className="px-4 py-2">
                   {p.inStock ? (
-                    <span className="text-zinc-300">{p.stockQuantity ?? 'in stock'}</span>
+                    <span className="text-muted">{p.stockQuantity ?? 'in stock'}</span>
                   ) : (
-                    <span className="text-red-400">out</span>
+                    <span className="text-danger">out</span>
                   )}
                 </td>
-                <td className="px-4 py-2 text-zinc-400">{p.salesRank ?? 0}</td>
-                <td className="px-4 py-2 text-zinc-500">
+                <td className="px-4 py-2 text-muted">{p.salesRank ?? 0}</td>
+                <td className="px-4 py-2 text-subtle">
                   {p.syncedAt ? new Date(p.syncedAt).toLocaleString() : '—'}
                 </td>
               </tr>
@@ -99,7 +99,7 @@ export function ProductsTable({ products }: { products: Product[] }) {
           </tbody>
         </table>
       </div>
-      <p className="text-xs text-zinc-500">{rows.length} of {products.length} products</p>
+      <p className="text-xs text-subtle">{rows.length} of {products.length} products</p>
     </div>
   );
 }

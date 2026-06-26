@@ -13,17 +13,17 @@ function Thumb({ item }: { item: ContentItem }) {
     // eslint-disable-next-line @next/next/no-img-element
     return <img src={item.imageUrl} alt="" className="h-12 w-12 rounded object-cover" />;
   }
-  return <div className="h-12 w-12 rounded bg-zinc-800" />;
+  return <div className="h-12 w-12 rounded bg-surface-2" />;
 }
 
 function Row({ item, children }: { item: ContentItem; children?: React.ReactNode }) {
   const hook = (item.script as { hook?: string }).hook ?? `Item #${item.id}`;
   return (
-    <div className="flex items-center gap-3 rounded-lg border border-zinc-800 bg-zinc-900 p-3">
+    <div className="flex items-center gap-3 rounded-lg border border-line bg-surface p-3">
       <Thumb item={item} />
       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm text-zinc-200" title={hook}>{hook}</p>
-        <p className="text-xs text-zinc-500">
+        <p className="truncate text-sm text-ink" title={hook}>{hook}</p>
+        <p className="text-xs text-subtle">
           {item.format ?? 'post'} · {(item.platforms.length ? item.platforms : Object.keys(item.finalVideoUrls)).join(', ') || '—'}
           {item.scheduledAt ? ` · ${new Date(item.scheduledAt).toLocaleString()}` : ''}
         </p>
@@ -61,11 +61,11 @@ export default async function CalendarPage() {
   const { next7, next30, later } = bucketScheduled(scheduled);
 
   return (
-    <main className="mx-auto max-w-4xl space-y-8 p-8 text-zinc-50">
+    <main className="mx-auto max-w-4xl space-y-8 p-8 text-ink">
       <header className="space-y-1">
-        <Link href="/dashboard" className="text-sm text-zinc-500 hover:text-zinc-300">← Dashboard</Link>
+        <Link href="/dashboard" className="text-sm text-subtle hover:text-muted">← Dashboard</Link>
         <h1 className="text-2xl font-semibold">Content Calendar</h1>
-        <p className="text-sm text-zinc-400">Tenant #{ctx.tenantId} · schedule approved content and see what&apos;s upcoming.</p>
+        <p className="text-sm text-muted">Tenant #{ctx.tenantId} · schedule approved content and see what&apos;s upcoming.</p>
       </header>
 
       <Section title={`Ready to schedule (${approved.length})`} empty="No approved items waiting.">
@@ -109,8 +109,8 @@ function Section({ title, empty, children }: { title: string; empty: string; chi
   const hasChildren = arr.some(Boolean) && arr.flat().filter(Boolean).length > 0;
   return (
     <section className="space-y-2">
-      <h2 className="text-sm font-medium text-zinc-300">{title}</h2>
-      {hasChildren ? <div className="space-y-2">{children}</div> : empty ? <p className="text-sm text-zinc-600">{empty}</p> : null}
+      <h2 className="text-sm font-medium text-muted">{title}</h2>
+      {hasChildren ? <div className="space-y-2">{children}</div> : empty ? <p className="text-sm text-subtle">{empty}</p> : null}
     </section>
   );
 }
