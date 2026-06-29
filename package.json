@@ -28,6 +28,7 @@
     "@supabase/ssr": "^0.12.0",
     "@supabase/supabase-js": "^2.108.2",
     "inngest": "^4.8.0",
+    "mammoth": "^1.12.0",
     "next": "16.2.9",
     "openai": "^6.44.0",
     "react": "19.2.4",

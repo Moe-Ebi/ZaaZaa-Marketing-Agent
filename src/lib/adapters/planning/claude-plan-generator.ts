@@ -20,7 +20,8 @@ const MODEL = process.env.ANTHROPIC_MODEL ?? 'claude-opus-4-8';
 
 // JSON schema mirrors PlanGenerationSchema; strict (additionalProperties:false,
 // all properties required) per Anthropic structured-output rules.
-const PLAN_JSON_SCHEMA = {
+// Exported so the plan extractor (uploaded plans) reuses the exact same shape.
+export const PLAN_JSON_SCHEMA = {
   type: 'object',
   additionalProperties: false,
   properties: {
