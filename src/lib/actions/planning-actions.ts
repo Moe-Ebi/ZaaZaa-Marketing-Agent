@@ -17,7 +17,26 @@ import {
   assertPlanOrg,
   regenerateWeek as regenerateWeekAdapter,
 } from '@/lib/adapters/planning';
-import type { Catalog, CatalogProduct, BudgetTier } from '@/lib/adapters/planning/types';
+import type { Catalog, CatalogProduct, BudgetTier, PlanBrief, PlanPlatform } from '@/lib/adapters/planning/types';
+
+export type WizardAnswers = {
+  primaryGoal: string;
+  season: string;
+  keyDates?: string;
+  targetAudience?: string;
+  tone?: string;
+  platforms: PlanPlatform[];
+  cadence: 'light' | 'medium' | 'heavy';
+  contentMix?: string;
+  videoStrategy: 'carousel' | 'lifestyle' | 'product_motion';
+  featuredFocus?: string;
+};
+
+const CADENCE_TIER: Record<WizardAnswers['cadence'], BudgetTier> = {
+  light: 'small',
+  medium: 'medium',
+  heavy: 'large',
+};
 
 export type PlanActionResult = { ok: boolean; message: string; planId?: number };
 
@@ -141,6 +160,52 @@ export async function uploadPlan(formData: FormData): Promise<PlanActionResult> 
     });
     revalidatePath('/dashboard/plans');
     return { ok: true, message: `Imported "${extracted.data.plan_name}".`, planId };
+  } catch (err) {
+    return { ok: false, message: (err as Error).message };
+  }
+}
+
+/** Guided questionnaire → rich brief → Claude generator → saved draft. */
+export async function generatePlanFromWizard(answers: WizardAnswers): Promise<PlanActionResult> {
+  const ctx = await requireTenantContext();
+  if (!answers.primaryGoal || !answers.season.trim()) {
+    return { ok: false, message: 'Primary goal and season are required' };
+  }
+
+  const catalog = await buildCatalog(ctx.tenantId);
+  if (!catalog) return { ok: false, message: 'No products in cache — run a WooCommerce sync first' };
+
+  const tier = CADENCE_TIER[answers.cadence] ?? 'medium';
+  const marketingFocus = [
+    answers.primaryGoal,
+    answers.featuredFocus ? `Feature: ${answers.featuredFocus}.` : '',
+    answers.keyDates ? `Plan around: ${answers.keyDates}.` : '',
+  ].filter(Boolean).join(' ');
+
+  const brief: PlanBrief = {
+    primaryGoal: answers.primaryGoal,
+    targetAudience: answers.targetAudience,
+    tone: answers.tone,
+    platforms: answers.platforms,
+    cadence: answers.cadence,
+    contentMix: answers.contentMix,
+    keyDates: answers.keyDates,
+    featuredFocus: answers.featuredFocus,
+  };
+
+  const gen = await generateMarketingPlan(answers.season, marketingFocus, tier, catalog, brief);
+  if (!gen.ok) return { ok: false, message: gen.error };
+
+  try {
+    const planId = await createPlanFromGeneration(ctx.tenantId, gen.data, {
+      season: answers.season,
+      marketingFocus,
+      tier,
+      startDate: new Date().toISOString().slice(0, 10),
+      videoStrategy: answers.videoStrategy,
+    });
+    revalidatePath('/dashboard/plans');
+    return { ok: true, message: `Plan "${gen.data.plan_name}" generated.`, planId };
   } catch (err) {
     return { ok: false, message: (err as Error).message };
   }

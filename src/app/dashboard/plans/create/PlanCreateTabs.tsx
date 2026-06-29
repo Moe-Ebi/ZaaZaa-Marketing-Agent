@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { PlanCreator } from './PlanCreator';
+import { PlanWizard } from './PlanWizard';
 import { UploadPlanForm } from './UploadPlanForm';
 
 type Tab = 'generate' | 'upload';
@@ -22,7 +22,7 @@ export function PlanCreateTabs() {
           </button>
         ))}
       </div>
-      {tab === 'generate' ? <PlanCreator /> : <UploadPlanForm />}
+      {tab === 'generate' ? <PlanWizard /> : <UploadPlanForm />}
     </div>
   );
 }

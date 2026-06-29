@@ -55,3 +55,16 @@ export interface Catalog {
 }
 
 export type BudgetTier = 'small' | 'medium' | 'large';
+
+// Richer context collected by the guided questionnaire (Phase 5), fed into the
+// Claude plan generator as additional brief on top of season/focus/tier.
+export interface PlanBrief {
+  primaryGoal?: string;        // e.g. "Drive sales", "Grow followers"
+  targetAudience?: string;
+  tone?: string;
+  platforms?: PlanPlatform[];  // platforms to prioritise
+  cadence?: string;            // light | medium | heavy
+  contentMix?: string;         // e.g. "Mostly video", "Balanced"
+  keyDates?: string;           // campaigns / dates to plan around
+  featuredFocus?: string;      // product/collection to feature (adaptive)
+}

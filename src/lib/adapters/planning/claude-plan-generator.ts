@@ -13,6 +13,7 @@ import {
   type PlanningResult,
   type Catalog,
   type BudgetTier,
+  type PlanBrief,
 } from './types';
 
 const API_URL = process.env.ANTHROPIC_API_URL ?? 'https://api.anthropic.com/v1/messages';
@@ -95,11 +96,27 @@ function catalogBlock(catalog: Catalog): string {
   ].join('\n');
 }
 
+function briefBlock(brief?: PlanBrief): string[] {
+  if (!brief) return [];
+  const lines = [
+    brief.primaryGoal ? `Primary goal: ${brief.primaryGoal}` : null,
+    brief.targetAudience ? `Target audience: ${brief.targetAudience}` : null,
+    brief.tone ? `Preferred tone: ${brief.tone}` : null,
+    brief.platforms?.length ? `Prioritise platforms: ${brief.platforms.join(', ')}` : null,
+    brief.cadence ? `Posting cadence: ${brief.cadence}` : null,
+    brief.contentMix ? `Content mix: ${brief.contentMix}` : null,
+    brief.keyDates ? `Key dates / campaigns to plan around: ${brief.keyDates}` : null,
+    brief.featuredFocus ? `Feature prominently: ${brief.featuredFocus}` : null,
+  ].filter(Boolean) as string[];
+  return lines.length ? ['', 'CAMPAIGN BRIEF:', ...lines] : [];
+}
+
 export async function generateMarketingPlan(
   season: string,
   marketingFocus: string,
   tier: BudgetTier,
   catalog: Catalog,
+  brief?: PlanBrief,
 ): Promise<PlanningResult<PlanGeneration>> {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) return { ok: false, error: 'ANTHROPIC_API_KEY is not set' };
@@ -108,6 +125,7 @@ export async function generateMarketingPlan(
     `Season / campaign: ${season}`,
     `Marketing focus: ${marketingFocus}`,
     `Budget tier: ${tier} (small = ~1 item/week, medium = ~2, large = ~3)`,
+    ...briefBlock(brief),
     '',
     'PRODUCT CATALOG (use these external IDs):',
     catalogBlock(catalog),
