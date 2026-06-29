@@ -54,9 +54,12 @@ async function main() {
     brandName: 'Zaazaa Shoes',
     brandColors: ['#2b2b2b', '#d4a017'],
     logoUrl: null,
+    typography: null,
     targetAudience: 'Value-conscious South African families and young trend-aware shoppers',
     doRules: ['Be encouraging', 'Mention value and durability', 'Celebrate local culture'],
     dontRules: ['No luxury/elitist language', 'No unrealistic claims'],
+    exampleLikes: [],
+    exampleDislikes: [],
     voiceProfile: v,
   };
   await upsertBrandProfile(orgId, profile);

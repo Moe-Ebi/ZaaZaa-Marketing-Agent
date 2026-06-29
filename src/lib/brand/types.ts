@@ -22,9 +22,12 @@ export const BrandProfileSchema = z.object({
   brandName: z.string().nullable(),
   brandColors: z.array(BrandColorSchema),
   logoUrl: z.string().nullable(),
+  typography: z.string().nullable(),
   targetAudience: z.string().nullable(),
   doRules: z.array(z.string()),
   dontRules: z.array(z.string()),
+  exampleLikes: z.array(z.string()),
+  exampleDislikes: z.array(z.string()),
   voiceProfile: VoiceProfileSchema,
 });
 export type BrandProfile = z.infer<typeof BrandProfileSchema>;

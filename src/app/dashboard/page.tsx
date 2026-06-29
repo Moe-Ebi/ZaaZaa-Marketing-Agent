@@ -65,7 +65,7 @@ export default async function DashboardPage() {
                 <p className="mt-2 text-sm text-muted">No brand profile yet — set one up to power every generation.</p>
               )}
             </div>
-            <Link href="/dashboard/brand-profile" className="btn-ghost btn-sm shrink-0">
+            <Link href="/dashboard/brand" className="btn-ghost btn-sm shrink-0">
               {hasVoice ? 'Edit' : 'Set up'}
             </Link>
           </div>

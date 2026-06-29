@@ -15,7 +15,7 @@ const NAV: Group[] = [
     items: [
       { href: '/dashboard/content', label: 'Content', icon: 'spark' },
       { href: '/dashboard/plans', label: 'Plans', icon: 'map' },
-      { href: '/dashboard/brand-profile', label: 'Brand', icon: 'palette' },
+      { href: '/dashboard/brand', label: 'Brand', icon: 'palette' },
     ],
   },
   {

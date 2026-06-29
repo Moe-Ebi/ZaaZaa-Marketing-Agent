@@ -15,9 +15,12 @@ interface BrandProfileRow {
   brand_name: string | null;
   brand_colors: unknown;
   logo_url: string | null;
+  typography: string | null;
   target_audience: string | null;
   do_rules: unknown;
   dont_rules: unknown;
+  example_likes: unknown;
+  example_dislikes: unknown;
   voice_profile: unknown;
   updated_at: string;
 }
@@ -36,9 +39,12 @@ function rowToProfile(r: BrandProfileRow): StoredBrandProfile {
     brandName: r.brand_name,
     brandColors: Array.isArray(r.brand_colors) ? r.brand_colors : [],
     logoUrl: r.logo_url,
+    typography: r.typography,
     targetAudience: r.target_audience,
     doRules: asStringArray(r.do_rules),
     dontRules: asStringArray(r.dont_rules),
+    exampleLikes: asStringArray(r.example_likes),
+    exampleDislikes: asStringArray(r.example_dislikes),
     voiceProfile: {
       tone: asStringArray(vp.tone),
       values: asStringArray(vp.values),
@@ -52,7 +58,7 @@ function rowToProfile(r: BrandProfileRow): StoredBrandProfile {
 }
 
 const SELECT =
-  'brand_name, brand_colors, logo_url, target_audience, do_rules, dont_rules, voice_profile, updated_at';
+  'brand_name, brand_colors, logo_url, typography, target_audience, do_rules, dont_rules, example_likes, example_dislikes, voice_profile, updated_at';
 
 /** The tenant's brand profile, or null if none has been created yet. */
 export async function getBrandProfile(organizationId: number): Promise<StoredBrandProfile | null> {
@@ -80,9 +86,12 @@ export async function upsertBrandProfile(
         brand_name: profile.brandName,
         brand_colors: profile.brandColors,
         logo_url: profile.logoUrl,
+        typography: profile.typography,
         target_audience: profile.targetAudience,
         do_rules: profile.doRules,
         dont_rules: profile.dontRules,
+        example_likes: profile.exampleLikes,
+        example_dislikes: profile.exampleDislikes,
         voice_profile: profile.voiceProfile,
       },
       { onConflict: 'organization_id' },

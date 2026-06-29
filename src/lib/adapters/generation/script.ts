@@ -41,6 +41,9 @@ function brandConstraints(p: StoredBrandProfile | null): string {
     p.doRules.length ? `DO: ${p.doRules.join('; ')}` : null,
     p.dontRules.length ? `DON'T: ${p.dontRules.join('; ')}` : null,
     v.prohibition_keywords.length ? `Never use these words/claims: ${v.prohibition_keywords.join(', ')}` : null,
+    p.typography ? `Typography style: ${p.typography}` : null,
+    p.exampleLikes.length ? `Content the brand likes (emulate the vibe): ${p.exampleLikes.join(' | ')}` : null,
+    p.exampleDislikes.length ? `Content the brand dislikes (avoid this): ${p.exampleDislikes.join(' | ')}` : null,
   ].filter(Boolean);
   return lines.join('\n');
 }
